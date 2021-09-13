@@ -477,8 +477,43 @@ def get_weigths(points, voxel_size=0.5):
 
     return ws
 
+def get_voxk(points, voxel_size=0.5, mesh=False):
+
+    pcd = points2pcd(points)
+    voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    voxel = []
+
+    # for each point, get the voxel index
+    for point in points:
+
+        i,j,k = voxel_grid.get_voxel(point)
+        voxel.append(k)
+
+    return voxel
+
+def get_voxk_mesh(meshfile, voxel_size=0.5):
+
+    mesh = o3d.io.read_triangle_mesh(meshfile)
+    vert = np.asarray(mesh.vertices)
+    tri = np.asarray(mesh.triangles)
+
+    # Get mesh by height from vertices points
+    voxk = get_voxk(vert, voxel_size=voxel_size)
+
+    voxel = []
+    # For each traingle, get its corresponfing voxel k (height)
+    # one for each of the three vertices that form the triangle
+    # and keep the most frequent K
+    for i in tri:
+        
+        a = [voxk[i[0]], voxk[i[1]], voxk[i[2]]]
+        counts = np.bincount(np.array(a))
+        voxel.append(np.argmax(counts))
+
+    return voxel
+
 def test_leaf_angle(mockname, voxel_size_la, voxel_size_w, kd3_sr, max_nn, debug=False, 
-savefig=None, text=None, norm_avg=True, downsample=False, weigths=True):
+savefig=None, text=None, norm_avg=True, downsample=False, weigths=True, voxel_size_h=1, downsample_debug=10):
 
     mockdir = os.path.join(_data, mockname)
     segtrees_dir_name = 'toy_trees'
@@ -498,6 +533,7 @@ savefig=None, text=None, norm_avg=True, downsample=False, weigths=True):
     meshfile = os.path.join(mockdir, 'mesh.ply')
     if os.path.isfile(meshfile):
         ta = true_angles(meshfile)
+        voxk_mesh = get_voxk_mesh(meshfile, voxel_size=voxel_size_h)
     else:
         raise ValueError('No mesh.ply file in %s' %(mockdir))
 
@@ -515,7 +551,9 @@ savefig=None, text=None, norm_avg=True, downsample=False, weigths=True):
         # load segmented tree (foliage only) data
         tree = np.load(file)
         if debug:
-            tree = tree[::10]
+            tree = tree[::downsample_debug]
+        else:
+            downsample_debug = None
         # Extract x,y, and z coordinates of foliage point cloud (fpc)
         points = tree.T[5:8].T 
 
@@ -547,14 +585,24 @@ savefig=None, text=None, norm_avg=True, downsample=False, weigths=True):
         ta = correct_angs(ta)
 
         if savefig is None:
-            savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
+            _savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
+            _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s.png' %(treename))
+        else:
+            _savefig = os.path.join(resdir, 'leaf_angle_dist_%s_%s.png' %(treename, savefig))
+            _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s_%s.png' %(treename, savefig))
 
         if weigths:
             ws = get_weigths(points, voxel_size=voxel_size_w)
         else:
             ws = None
 
-        h, htruth = figures.angs_dist(thetaL, ta, savefig=savefig, text=text, ws=ws)
+        h, htruth = figures.angs_dist(thetaL, ta, savefig=_savefig, text=text, ws=ws, downsample_debug=downsample_debug)
+        voxk = get_voxk(points, voxel_size=voxel_size_h)
+        figures.angs_dist_k(voxk, voxk_mesh, thetaL, ta, ws=ws, savefig=_savefig_k)
+        # print('len voxk', len(voxk))
+        # print('len angles array', len(thetaL))
+        # print('How many ks', set(voxk))
+
         # find the chisquare
         # h = [np.nan if x == 0 else x for x in h]
         # htruth = [np.nan if x == 0 else x for x in htruth]
