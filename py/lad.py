@@ -24,20 +24,20 @@ _data = os.path.join(basedir, 'data')
 _images = os.path.join(basedir, 'images')
 
 
-def beam_direction(yaw, pitch):
+def beam_direction(yaw, pitch, scan_inc):
     '''
     Get laser beam direction from YAW and PITCH
     '''
     
-    x = np.cos(yaw)*np.cos(pitch)
-    y = np.sin(yaw)*np.cos(pitch)
-    z = np.sin(pitch)
+    x = np.cos(yaw)*np.cos(pitch+np.radians(scan_inc - 90))
+    y = np.sin(yaw)*np.cos(pitch+np.radians(scan_inc - 90))
+    z = np.sin(pitch+np.radians(scan_inc - 90))
     
     points = np.vstack((np.array(x), np.array(y), np.array(z))).transpose()
     
     return points
 
-def trace_beam(points, beam_angles, distance, res=0.1):
+def trace_beam(points, beam_angles, distance, scan_inc, res=0.1):
 
     tracers = {'p':[], 'pb':[], 'linepts':[]}
 
@@ -45,15 +45,15 @@ def trace_beam(points, beam_angles, distance, res=0.1):
 #     dist = np.array(df['distance'])
 
     # unitary vector with direction of beam from camera point of view
-    uv = beam_direction(beam_angles.T[0], beam_angles.T[1]) 
-
+    uv = beam_direction(beam_angles.T[0], beam_angles.T[1], scan_inc) 
+    # print(uv[:5])
     for i in range(uv.shape[0]):
         
         # proyect unitary vector to actual distance of beam and invert it to point cloud data view
         N = int(distance[i]/res)
-        pb = -1 * uv[i] * np.linspace(0.01, distance[i], N)[:, np.newaxis] # this traces the beam with N points
+        pb = 1 * uv[i] * np.linspace(0.01, distance[i], N)[:, np.newaxis] # this traces the beam with N points
 
-        # Moving proyected unitary vector (i.e. the beam) to its reall position
+        # Moving proyected unitary vector (i.e. the beam) to its real position
         linepts = points[i] + pb
 
         # create matrix with position of the origin beam and position of the intersected beam
@@ -78,7 +78,7 @@ def within_plant(points, foliage_points, skipz=False):
 
     return keep
 
-def get_beams_traces(foliage_points, files, res=0.1):
+def get_beams_traces(foliage_points, files, scan_inc, res=0.1):
     """
     Get beam traces points within plant region.
     """
@@ -87,7 +87,7 @@ def get_beams_traces(foliage_points, files, res=0.1):
     # read the numpy files
     for file in files:
 
-        df = np.loadtxt(file)
+        df = np.load(file)
         if len(df) == 0: continue
         filename = file.split('/')[-1]
 #         print(filename)
@@ -101,7 +101,7 @@ def get_beams_traces(foliage_points, files, res=0.1):
             print(filename, 'skipped...')
             continue
 
-        tracers = trace_beam(points[inplant], beam_angles[inplant], distance[inplant], res=res)
+        tracers = trace_beam(points[inplant], beam_angles[inplant], distance[inplant], scan_inc, res=res)
         beam_points = np.vstack(tracers['linepts'])
         beam_points = beam_points.reshape(beam_points.shape[0], beam_points.shape[2])
     #     print(beam_points.shape)
@@ -118,6 +118,99 @@ def get_beams_traces(foliage_points, files, res=0.1):
             beam_points_wpr.append(beam_points[keep])
 
     return beam_points_wpr
+
+def get_all_traces(mockname, res=0.1, debug=False, downsample_debug=1):
+    """
+    Get all beam traces points for each segmented tree within plant region.
+    """
+
+    mockdir = os.path.join(_data, mockname)
+    segtrees_dir_name = 'toy_trees'
+    segtrees_dir = os.path.join(mockdir, segtrees_dir_name)
+
+    # Results directory
+    resdir_name = '%s_%s' %('results', mockname)
+    resdir = os.path.join(mockdir, resdir_name)
+    if not os.path.exists(resdir):
+        os.makedirs(resdir)
+
+    # path of files
+    segtrees_files = glob.glob(os.path.join(segtrees_dir, 'tree_*.npy'))
+    rawdata_files = glob.glob(os.path.join(mockdir, 's*.npy'))
+
+    tracers_dict = {i.split('/')[-1].split('.')[0]:[] for i in segtrees_files}
+
+    # read the numpy files
+    for file in rawdata_files:
+
+        df = np.load(file)
+
+        if len(df) == 0: 
+            continue
+        else:
+            print(file)
+            # print(df.T[1:3].T2[:3])
+
+        if debug:
+            df = df[::downsample_debug]
+
+        filename = file.split('/')[-1]
+        # x, y, z = df.T[5], df.T[6], df.T[7]
+        points = df.T[5:8].T
+
+        # get sensor coordinates
+        try:
+            spos = os.path.join(mockdir, 'scanner_pos.txt')
+        except Exception as e:
+            raise ValueError(e)
+
+        scan = laod_scan_pos(spos)
+        id = [i.decode("utf-8") for i in scan['scan']]
+        keep = np.array(id) == filename[:2]
+        _, sx, sy, sz = scan[keep][0]
+
+        # sensor coordinates
+        p2 = [sx, sy, sz]
+
+        # for each LiDAR point, draw a point-like line trhough the sensor
+        tracers = []
+        for p1 in points:
+
+            pp = line2points_vect(p1, p2, res=res)
+            tracers.append(pp)
+
+        beam_points = np.vstack(tracers)
+        # beam_points = beam_points.reshape(beam_points.shape[0], beam_points.shape[2])
+
+    # ''' 
+        for treefile in segtrees_files:
+
+            # Tree name
+            treename = treefile.split('/')[-1].split('.')[0]
+            # load segmented tree (foliage only) data
+            tree = np.load(file)
+            # Extract x,y, and z coordinates of foliage point cloud (fpc)
+            foliage_points = tree.T[5:8].T
+
+            #continue if points within plant region
+            inplant = within_plant(beam_points, foliage_points)
+
+            if inplant.sum() == 0: 
+                print(treename, 'skipped...')
+                continue
+            else:
+                print('%s \t beam traces points in tree %s: \t %i --> %i' %(filename, treename, points.shape[0], np.sum(inplant)))
+                tracers_dict[treename].append(beam_points[inplant])
+
+    for key, val in tracers_dict.items():
+
+        outdir = os.path.join(mockdir, segtrees_dir_name, 'tracers_%s_%s.npy' %(key, str(res)))
+        new_val = np.array(np.vstack(val))
+        np.save(outdir, new_val)
+    
+    # '''
+
+    return tracers
 
 #
 
@@ -286,8 +379,11 @@ def get_attributes(m3shape, m3p, m3b, show=False):
 #
 def stheta(theta, thetaLq):
     
-    x = lambda theta, thetaLq : 1/np.cos(np.arctan(np.tan(theta))*np.arctan(np.tan(thetaLq)))
+    # x = lambda theta, thetaLq : 1/np.cos(np.arctan(np.tan(theta))*np.arctan(np.tan(thetaLq)))
+    x = lambda theta, thetaLq : np.arccos((1/np.tan(theta))*(1/np.tan(thetaLq)))
     
+    # s = np.cos(theta)*np.cos(thetaLq)
+
     if theta <= np.pi/2 - thetaLq:
         s = np.cos(theta)*np.cos(thetaLq)
         
@@ -298,41 +394,61 @@ def stheta(theta, thetaLq):
         
     return s
     
-def Gtheta(theta, thetaL, tq, norm=True):
+# def Gtheta(theta, thetaL, tq, norm=True):
+    
+#     """
+#     Compute the G(\theta).
+    
+#     theta:  float::  beam-angle in degrees
+#     thetaL: float-array:: leaf-inclination-angle distribution in degrees
+#     tq: int:: total number of leaf-inclination-angle classes
+#     """
+    
+#     bins = np.linspace(0, 90, tq+1)
+#     gtot = len(thetaL)
+#     Gtheta_i = []
+
+#     for q in range(len(bins)-1):
+        
+#         keep = np.logical_and(thetaL >= bins[q], thetaL < bins[q+1])
+#         if norm: gqi = np.sum(keep)/gtot # normalize the inclination-angle distribution?
+#         else: gqi = np.sum(keep)
+#         thetaLq = np.median(np.array(thetaL)[keep])
+#         if np.isnan(thetaLq):
+#             thetaLq = bins[q] + (bins[q+1] - bins[q])/2.
+# #         print(q, thetaLq)
+#         sthetaq = stheta(np.radians(np.array(theta)), np.radians(np.array(thetaLq)))
+#         Gtheta_i.append(gqi*sthetaq)
+
+# #         print(gqi*sthetaq)
+# #     print('Total: ',np.array(Gtheta_i).sum())
+
+#     return np.array(Gtheta_i).sum()
+
+def Gtheta(theta, thetaLq, gq):
     
     """
     Compute the G(\theta).
     
     theta:  float::  beam-angle in degrees
     thetaL: float-array:: leaf-inclination-angle distribution in degrees
-    tq: int:: total number of leaf-inclination-angle classes
     """
-    
-    bins = np.linspace(0, 90, tq+1)
-    gtot = len(thetaL)
+
     Gtheta_i = []
 
-    for q in range(len(bins)-1):
+    for q, i in zip(thetaLq, gq):
         
-        keep = np.logical_and(thetaL >= bins[q], thetaL < bins[q+1])
-        if norm: gqi = np.sum(keep)/gtot # normalize the inclination-angle distribution?
-        else: gqi = np.sum(keep)
-        thetaLq = np.median(np.array(thetaL)[keep])
-        if np.isnan(thetaLq):
-            thetaLq = bins[q] + (bins[q+1] - bins[q])/2.
-#         print(q, thetaLq)
-        sthetaq = stheta(np.radians(np.array(theta)), np.radians(np.array(thetaLq)))
-        Gtheta_i.append(gqi*sthetaq)
-
-#         print(gqi*sthetaq)
-#     print('Total: ',np.array(Gtheta_i).sum())
+        sthetaq = stheta(np.radians(np.array(theta)), np.radians(np.array(q)))
+        Gtheta_i.append(i*sthetaq)
+        # print(i, sthetaq)
 
     return np.array(Gtheta_i).sum()
     
 #
-def get_lad_perk(kcoord, m3att, alpha, voxel_size):
+def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2):
     
     ki, kf = kcoord
+    # print(kf-ki)
     
     if kf > m3att.shape[2]:
         raise ValueError('k values cannot be greater than available. Maximum K value is: %i' %(m3att.shape[2]))
@@ -345,18 +461,25 @@ def get_lad_perk(kcoord, m3att, alpha, voxel_size):
         
         nI = (m3[:,:,i] == 1).sum()
         nP = (m3[:,:,i] == 2).sum()
-        lai.append(nI/(nI+nP))
+        _lai = nI/(nI+nP)
+        alpha = alphas[i]
+        # print(1/DeltaH, alpha, _lai)
+        # lai.append(_lai)
+        lai.append(alpha * _lai)
 #         print(i, nI, nP, nI/(nI+nP))
 #         print(i, nI/(nI+nP), DeltaH)
         
-    LAD = alpha * (1/DeltaH) * np.array(lai).sum()
-#     print(alpha, 1/DeltaH, np.array(lai).sum(), LAD)
-#     print(ki*voxel_size+DeltaH/2., LAD)
+    # LAD = alpha2 * np.mean(alphas) * (1/DeltaH) * np.array(lai).sum()
+    LAD = alpha2 * (1/DeltaH) * np.array(lai).sum()
 
-    return ki*voxel_size+DeltaH/2., LAD
+#     print(alpha, 1/DeltaH, np.array(lai).sum(), LAD)
+    # print('k, mean alphas: ', kcoord, np.mean(alphas))
+    # print((ki+(kf-ki-1)/2)*voxel_size, LAD)
+
+    return (ki+(kf-ki-1)/2)*voxel_size, LAD
     
 #
-def get_LADS(m3att, alpha, voxel_size, kbins):
+def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2):
     
     kmax = m3att.shape[2]
     ar = np.arange(0, kmax, kbins)
@@ -370,7 +493,10 @@ def get_LADS(m3att, alpha, voxel_size, kbins):
     
 #     print(kcoords)
     for i in kcoords:
-        h, lad = get_lad_perk(i, m3att, alpha, voxel_size)
+        ki, kf = i
+        alphas = alphas_k[ki:kf]
+        # print(i, alphas)
+        h, lad = get_lad_perk(i, m3att, alphas, voxel_size, alpha2)
         lads.append([h, lad])
         
     return np.array(lads)
@@ -448,7 +574,8 @@ def mesh_leaf_area(meshfile):
     else:
         raise ValueError('Mesh does not find clusters leaves with 4 triangles.')
 
-    return np.round(la, 5)
+    return np.round(la, 6)
+    # return la
 
 def get_weigths(points, voxel_size=0.5):
 
@@ -587,31 +714,45 @@ savefig=None, text=None, norm_avg=True, downsample=False, weigths=True, voxel_si
         if savefig is None:
             _savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
             _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s.png' %(treename))
+            _savefig_G = os.path.join(resdir, 'G_alpha_theta_%s.png' %(treename))
         else:
             _savefig = os.path.join(resdir, 'leaf_angle_dist_%s_%s.png' %(treename, savefig))
             _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s_%s.png' %(treename, savefig))
+            _savefig_G = os.path.join(resdir, 'G_alpha_theta_%s_%s.png' %(treename, savefig))
 
         if weigths:
             ws = get_weigths(points, voxel_size=voxel_size_w)
         else:
             ws = None
 
-        h, htruth = figures.angs_dist(thetaL, ta, savefig=_savefig, text=text, ws=ws, downsample_debug=downsample_debug)
+        h, thetaLq, htruth = figures.angs_dist(thetaL, ta, savefig=_savefig, text=text, ws=ws, downsample_debug=downsample_debug)
         voxk = get_voxk(points, voxel_size=voxel_size_h)
         figures.angs_dist_k(voxk, voxk_mesh, thetaL, ta, ws=ws, savefig=_savefig_k)
-        # print('len voxk', len(voxk))
-        # print('len angles array', len(thetaL))
-        # print('How many ks', set(voxk))
 
-        # find the chisquare
-        # h = [np.nan if x == 0 else x for x in h]
-        # htruth = [np.nan if x == 0 else x for x in htruth]
+        # # get G(theta)
+        # thetaLq = (thetaLq[:-1]+thetaLq[1:])/2
+        # # print(thetaLq, h, htruth)
+        # Gthetas = np.array([[i, Gtheta(i, thetaLq, h)] for i in np.arange(0, 95, 2)])
+        # alpha = np.cos(np.radians(Gthetas[:,0]))/Gthetas[:,1]
+        # G_alpha_theta = np.vstack((Gthetas[:,0], Gthetas[:,1], alpha))
+        # figures.G_alpha_plot(G_alpha_theta, savefig=_savefig_G)
+        # outdir_g = os.path.join(mockdir, segtrees_dir_name, 'G_alpha_theta_%s_%s.npy' %(treename, savefig))
+        # np.save(outdir_g, G_alpha_theta)
+
+        # Save angles and weights?
+        # not entirely sure because file will be particular
+        # to a downsample_debug
+        outdir_angs = os.path.join(mockdir, segtrees_dir_name, 'angles_%s_%s.npy' %(treename, str(downsample_debug)))
+        np.save(outdir_angs, thetaL)
+        if weigths:
+            outdir_ws = os.path.join(mockdir, segtrees_dir_name, 'weights_%s_%s.npy' %(treename, str(downsample_debug)))
+            np.save(outdir_ws, ws)
+
         if float(0) in htruth:
             chi2, p = chisquare(h+1, htruth+1)
         else:
             chi2, p = chisquare(h, htruth)
-        # print(h+1, htruth+1)
-        # print(chi2, p)
+
         chis2.append([treename, chi2, p])
 
     if debug:
@@ -724,3 +865,386 @@ def best_fit_pars_plot(res, mockname, savefig=None, norm_avg=True, downsample=Fa
         savefig = os.path.join(mockdir, resdir_name, 'bestfits_pars.png')
 
     plt.savefig(savefig, dpi=200, bbox_inches='tight')
+
+
+def get_lad(mockname, res=0.05, debug=True, downsample_debug=None, voxel_size=0.1):
+
+    mockdir = os.path.join(_data, mockname)
+    segtrees_dir_name = 'toy_trees'
+    segtrees_dir = os.path.join(mockdir, segtrees_dir_name)
+
+    # Results directory
+    resdir_name = '%s_%s' %('results', mockname)
+    resdir = os.path.join(mockdir, resdir_name)
+    if not os.path.exists(resdir):
+        os.makedirs(resdir)
+
+    # path of files
+    segtrees_files = glob.glob(os.path.join(segtrees_dir, 'tree_*.npy'))
+    rawdata_files = glob.glob(os.path.join(mockdir, 'toy*.npy'))
+
+    # Mesh file
+    meshfile = os.path.join(mockdir, 'mesh.ply')
+    if os.path.isfile(meshfile):
+        print(meshfile)
+        # ta = lad.true_angles(meshfile)
+        # voxk_mesh = lad.get_voxk_mesh(meshfile, voxel_size=voxel_size_h)
+    else:
+        raise ValueError('No mesh.ply file in %s' %(mockdir))
+
+    if debug:
+        # segtrees_files = segtrees_files[3:4]
+        segtrees_files = segtrees_files[0:1]
+
+    # chis2 = []
+
+    for file in segtrees_files:
+
+        t1 = process_time()
+
+        # Tree name
+        treename = file.split('/')[-1].split('.')[0]
+
+        # Check if tracers are available for this tree
+        tracer_file = os.path.join(mockdir, segtrees_dir_name, 'tracers_%s_%s.npy' %(treename, str(res)))
+        if os.path.isfile(tracer_file):
+            tracers = np.load(tracer_file)
+        else:
+            raise ValueError('No such file: %s' %(tracer_file))
+
+        # Check if angles and weights are available
+        outdir_angs = os.path.join(mockdir, segtrees_dir_name, 'angles_%s_%s.npy' %(treename, str(1)))
+        outdir_ws = os.path.join(mockdir, segtrees_dir_name, 'weights_%s_%s.npy' %(treename, str(1)))
+
+        # load segmented tree (foliage only) data
+        tree = np.load(file)
+        if debug:
+            tree = tree[::downsample_debug]
+        else:
+            downsample_debug = None
+            
+        # Extract x,y, and z coordinates of foliage point cloud (fpc)
+        points = tree.T[5:8].T
+        Spoints = tree.T[16:19].T
+        # beam_angles = tree.T[1:3].T # Pitch and Yaw
+
+        t2 = process_time()
+        print('Stage 1:', t2-t1)
+
+        t1 = process_time()
+
+        # find atributes
+
+        # get points voxel bounding box
+        pcd = points2pcd(points)
+        voxp = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
+        # voxp.get_axis_aligned_bounding_box()
+
+        # Voxelize the beam points with same bounding box dimensions as the points voxel grid
+        pcd = points2pcd(tracers)
+        voxb = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, 
+                                                                            min_bound=voxp.get_min_bound().reshape(3,1), 
+                                                                            max_bound=voxp.get_max_bound().reshape(3,1))
+
+        # Create voxel of plant region
+        width, height, depth = voxp.get_max_bound() - voxp.get_min_bound()
+        print(width, height, depth)
+        voxs = o3d.geometry.VoxelGrid.create_dense(origin=voxp.origin, color=np.array([0,0,1]), voxel_size=voxel_size, width=width, height=height, depth=depth)
+
+        t2 = process_time()
+        print('Stage 2:', t2-t1)
+
+        t1 = process_time()
+
+        # Get solid voxel grid indexes
+        voxs_idx = get_voxels(voxs)
+
+        # get i,j,k max and min
+        vdict = idx_bounds(voxs_idx, True)
+        ijk_bounds = np.array(list(vdict.values())).reshape(1,6)[0]
+
+        # check that all index (i,j and k) are positive
+        if np.any(ijk_bounds < 0):
+            raise ValueError('Solid voxel grid found negative (i,j,k) values.')
+
+        # create 3D boolean matrix of i,j,k size
+        m3s = np.zeros(np.array(vdict['ijk_max'])+1, dtype=bool)
+        print(m3s.shape)
+
+        # Check 3D matrix i,j,k size matches length of solid voxel grid index array: i*j*k == voxs_idx.shape[0]
+        assert np.product(np.array(vdict['ijk_max'])+1) == voxs_idx.shape[0]
+
+        t2 = process_time()
+        print('Stage 3:', t2-t1)
+
+        t1 = process_time()
+
+        # get voxel grid indexes for points and beams voxels
+        voxp_idx = get_voxels(voxp)
+        voxb_idx = get_voxels(voxb)
+
+        # get rid of voxels outside the plant region
+        voxp_idx = within_bounds(voxp_idx, voxs_idx)
+        voxb_idx = within_bounds(voxb_idx, voxs_idx)
+
+        # fill 3D matrix with True if voxel exist
+        m3p = m3s.copy()
+        for (i,j,k) in voxp_idx:
+            
+            m3p[i][j][k] = True
+            
+        print('Number of voxels ocupied by points cloud: \t %i' %(m3p.sum()))
+
+        m3b = m3s.copy()
+        for (i,j,k) in voxb_idx:
+                
+            m3b[i][j][k] = True
+            
+        print('Number of voxels ocupied by beam points cloud: \t %i' %(m3b.sum()))
+        print('Total number of voxels in plant regions: \t %i' %((~m3s).sum()))
+
+        m3att = get_attributes(m3s.shape, m3p, m3b, True)
+
+        t2 = process_time()
+        print('Stage 4:', t2-t1)
+
+        t1 = process_time()
+
+        # get LAD
+        voxk = get_voxk(points, voxel_size)
+        lia = np.load(outdir_angs)
+        lia = lia[::downsample_debug]
+        ws = np.load(outdir_ws)
+        ws = ws[::downsample_debug]
+
+        # get beam inclination angle (BIA)
+        bia = []
+        for i, j in zip(points, Spoints):
+            # beam vector
+            v = np.array(j) - np.array(i)
+            # beam unitary vector
+            uv = v / np.linalg.norm(v)
+            bia.append(vecttoangle([0, 0, 1], uv))
+
+
+        # alphas_k = alpha_k(bia, voxk, lia, ws, resdir)
+
+        # lads = get_LADS(m3att, alpha, voxel_size, kbins)
+        # kmax = m3att.shape[2]
+        # lads_mesh = get_LADS_mesh(meshfile, voxel_size, kbins, kmax)
+        t2 = process_time()
+        print('Stage 5:', t2-t1)
+
+    return m3att, meshfile, bia, voxk, lia, ws, resdir
+
+def alpha_k(bia, voxk, lia, ws, resdir, show=False):
+
+    colors = plt.cm.jet(np.linspace(0,1,len(set(voxk))))
+    # uv = beam_direction(beam_angles.T[0], beam_angles.T[1], scan_inc)
+    
+    bins = np.linspace(0, 90, int(90/1)) # Don't change this!!!
+    weights = 1/ws
+    h, x = np.histogram(lia, bins=bins, weights=weights, density=True)
+    thetaLq = (x[:-1]+x[1:])/2
+    alpha = [np.cos(np.radians(i))/Gtheta(i, thetaLq, h) for i in range(90)]
+    alpha_f = lambda theta: np.cos(np.radians(theta))/Gtheta(theta, thetaLq, h)
+
+    bia_ = bia
+    bia = np.array(correct_angs(np.array(bia_)))
+    bamin, bamax = np.percentile(bia, (0.3,99.7))
+    ba = np.linspace(bamin, bamax, len(set(voxk)))
+
+    if show:
+        fig = plt.figure(figsize=(12,6))
+        plt.subplot(1,1,1)
+        plt.hist(np.array(bia_), 40, histtype='step', label='pre correction')
+        plt.hist(bia, 40, histtype='step', label='after correction')
+        plt.legend()
+        plt.xlabel(r'$\theta$')
+        plt.ylabel(r'$Frecuency$')
+
+        savefig = os.path.join(resdir, 'bia.png')
+        plt.savefig(savefig, dpi=200, bbox_inches='tight')
+
+    if show:
+        fig = plt.figure(figsize=(12,6))
+        plt.subplot(1,1,1)
+
+        for k in list(set(voxk)):
+            keep = voxk == k
+            angi = bia[keep]
+            median = np.median(angi)
+
+            plt.subplot(1,1,1)
+            if k == 0 or k == list(set(voxk))[-1]:
+                label = 'k=%i' %(k)
+            else:
+                label = None
+            plt.hist(np.array(angi), 30, histtype='step', color=colors[k], label=label)
+            # plt.axvline(median, ls='--')
+            plt.legend()
+
+        plt.xlabel(r'$\theta$')
+        plt.ylabel(r'$Frecuency$')
+        savefig = os.path.join(resdir, 'bia_per_k.png')
+        plt.savefig(savefig, dpi=200, bbox_inches='tight')
+
+    # heigh density
+    # bins_k = list(set(voxk))
+    # bins_ = np.linspace(0, len(bins_k), len(bins_k)+1)
+    # hd, kb = np.histogram(voxk, bins=bins_, weights=weights, density=True)
+    # print(kb, hd)
+
+    res = []
+    if show:
+        fig = plt.figure(figsize=(14, 6))
+
+    for k in list(set(voxk)):
+
+        keep = voxk == k
+        angi = bia[keep]
+        median = np.median(angi)
+
+        h_, x_ = np.histogram(lia[keep], bins=bins, weights=weights[keep], density=True)
+        thetaLq_ = (x_[:-1]+x_[1:])/2
+        alpha_ = [np.cos(np.radians(i))/Gtheta(i, thetaLq_, h_) for i in range(90)]
+        # print('k, height density: ', h_)
+
+        if show:
+            plt.subplot(1,1,1)
+            if k == 0 or k == list(set(voxk))[-1]:
+                label = 'k=%i' %(k)
+            else:
+                label = None
+            plt.plot(np.arange(0, 90, 1), alpha_, lw=0.5, color=colors[k], label=label)
+            if k == list(set(voxk))[-1]: 
+                plt.plot(np.arange(0, 90, 1), alpha, lw=3, ls='--', color='k', label='all')
+                plt.axvline(57.5, ls='--', lw=3, color='r', label=r'$\theta_{0}=57.5$')
+                # plt.axvline(scan_inc if scan_inc <= 90 else 180-scan_inc, ls='--', lw=3, color='orange', label=r'$\theta_{S}=%i$' %(scan_inc if scan_inc <= 90 else 180-scan_inc))
+                plt.fill_between(ba, [alpha_f(i) for i in ba], color='yellow', alpha=0.5)
+            plt.legend()
+        
+        # print('k, median = ', k, median)
+        alpha_min = np.cos(np.radians(angi.min()))/Gtheta(angi.min(), thetaLq, h)
+        alpha_max = np.cos(np.radians(angi.max()))/Gtheta(angi.max(), thetaLq, h)
+        # alpha_median = np.cos(np.radians(ba[k]))/Gtheta(ba[k], thetaLq, h)
+        alpha_median = np.cos(np.radians(median))/Gtheta(median, thetaLq, h)
+        res.append([k, angi.min(), alpha_min, angi.max(), alpha_max, median, alpha_median])
+        # print('k, median, alpha_median', k, median, alpha_median)
+
+    if show:
+        plt.xlabel(r'$\theta$')
+        plt.ylabel(r'$alpha(\theta)$')
+
+        savefig = os.path.join(resdir, 'alphas.png')
+        plt.savefig(savefig, dpi=200, bbox_inches='tight')
+
+    return np.array(res)
+
+def get_LADS_mesh(meshfile, voxel_size, kbins, kmax):
+
+    mesh = o3d.io.read_triangle_mesh(meshfile)
+
+    angles_mesh = true_angles(meshfile)
+    angles_mesh = np.array(correct_angs(angles_mesh))
+    # angles_mesh = np.array(angles_mesh)
+    voxk = np.array(get_voxk_mesh(meshfile, voxel_size=voxel_size))
+    # get surface area
+    sa = mesh.get_surface_area()
+    # Area per triangle
+    area = np.full(len(voxk), np.round(sa/len(voxk), 6))
+
+    # for volume
+    vert = np.asarray(mesh.vertices)
+    pcd = points2pcd(vert)
+    voxel = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    width, height, depth = voxel.get_max_bound() - voxel.get_min_bound()
+
+    ar = np.arange(0, kmax, kbins)
+    kcoords = []
+    lads = []
+
+    for i in range(len(ar)-1):
+        kcoords.append([ar[i],ar[1:][i]-1])
+
+    kcoords.append([ar[-1], kmax-1])
+    # print(set(voxk))
+    lads = []
+
+    for i in kcoords:
+
+        ki, kf = i
+        
+        keep = np.logical_and(voxk >= ki, voxk <= kf)
+        
+        # Area per leaf corrected by its angle with respect to the zenith
+        Aleaf = area[keep]*np.cos(np.radians(angles_mesh[keep]))
+        # plt.hist(np.cos(np.radians(angles_mesh[keep])), 30, label=i)
+        # plt.legend()
+        # plt.show()
+    
+        # Aleaf = area[keep]
+        # Total area in bin
+        A = Aleaf.sum()
+        # get volume
+        volume = width * height * kbins * voxel_size
+        # print(volume)
+
+        #save lad
+        deltaH = (kf - ki)/2
+        lads.append([(i[0]+deltaH)*voxel_size, A/volume])
+        # print(kf, ki)
+        # print(len(i), i[0], deltaH, A/volume)
+
+    return np.array(lads)
+
+def laod_scan_pos(filename):
+
+    scan = np.loadtxt(filename, delimiter=',', dtype={'names':('scan', 'x', 'y', 'z'),
+                'formats':('S4', 'f4', 'f4', 'f4')})
+
+    return scan
+
+def line2points_cartesian(p1, p2, res):
+
+    x1, y1, z1 = p1
+    x2, y2, z2 = p2
+    l, m, n = x2-x1, y2-y1, z2-z1
+
+    x = np.arange(x1, x2, res)
+    if l == 0:
+        print('l=0', p1, p2)
+        z = z1
+        y = (m/n) * (z - z1) + y1
+    elif m == 0:
+        print('m=0', p1, p2)
+        y = y1
+        z = (n/l) * (x - x1) + z1
+    elif n == 0:
+        print('n=0', p1, p2)
+        y = (m/l) * (x - x1) + y1
+        z = z1
+    else:
+        y = (m/l) * (x - x1) + y1
+        z = (n/m) * (y - y1) + z1
+
+    return x, y, z
+
+def line2points_vect(p1, p2, res):
+
+    v = np.array(p2) - np.array(p1)
+    uv = v / np.linalg.norm(v)
+    norm = np.linalg.norm(v)
+    # proyect unitary vector to actual distance of beam and invert it to point cloud data view
+    N = int(norm/res)
+    pb = 1 * uv * np.linspace(0.01, norm, N)[:, np.newaxis] # this traces the beam with N points
+    pp = np.array(p1) + pb
+    # px, py, pz = pp.T[0], pp.T[1], pp.T[2]
+
+    return pp
+
+
+    
+    
+
+

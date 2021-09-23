@@ -2,6 +2,12 @@ import matplotlib.pyplot as plt
 from matplotlib import cycler
 import numpy as np
 from scipy.stats import chisquare
+import os, glob
+
+import lad
+
+basedir = os.path.dirname(os.getcwd())
+_data = os.path.join(basedir, 'data')
 
 
 colors = cycler('color',
@@ -25,7 +31,7 @@ def angs_dist(angs, true_angles=None, ws=None, downsample_debug=None, savefig=No
 
     fig = plt.figure(figsize=(8,5))
 
-    bins = np.linspace(0, 90, int(90/2))
+    bins = np.linspace(0, 90, int(90/5))
     # bins = np.linspace(0, 180, int(180/4))
 
     if ws is None:
@@ -66,9 +72,9 @@ def angs_dist(angs, true_angles=None, ws=None, downsample_debug=None, savefig=No
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
     
     if true_angles is not None:
-        return np.array(x[0]), np.array(x_truth[0])
+        return np.array(x[0]), np.array(x[1]), np.array(x_truth[0])
     else:
-        return np.array(x[0])
+        return np.array(x[0]), np.array(x[1])
 
 
 
@@ -122,4 +128,74 @@ def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None):
 
     if savefig is not None:
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
+
+def G_alpha_plot(G_alpha_theta, savefig=None):
+
+    fig = plt.figure(figsize=(10,5))
+
+    plt.plot(G_alpha_theta[0], G_alpha_theta[1], label=r'$G(\theta)$')
+    plt.plot(G_alpha_theta[0], G_alpha_theta[2], label=r'$\alpha(\theta)$')
+    plt.xlabel(r'$\theta$')
+    plt.ylabel(r'$f(\theta)$')
+    plt.legend(loc='lower left')
+
+    # 
+    plt.ioff()
+
+    if savefig is not None:
+        plt.savefig(savefig, dpi=200, bbox_inches='tight')
     
+def show_beams(mockname, sample, tracers=False, res=1):
+
+    # show sample of beams
+    colors = ['b', 'cyan', 'orange', 'yellow']
+    fig = plt.figure(figsize=(10,10))
+    ax = plt.axes(projection='3d')
+
+    mockdir = os.path.join(_data, mockname)
+    rawdata_files = glob.glob(os.path.join(mockdir, 's*.npy'))
+
+    # Results directory
+    resdir_name = '%s_%s' %('results', mockname)
+    resdir = os.path.join(mockdir, resdir_name)
+    if not os.path.exists(resdir):
+        os.makedirs(resdir)
+
+    # read the numpy files
+    for num, file in enumerate(rawdata_files):
+
+        df = np.load(file)
+        idx = np.random.randint(0, len(df), sample, dtype=int)
+        df = df[idx]
+
+        filename = file.split('/')[-1]
+        x, y, z = df.T[5], df.T[6], df.T[7]
+
+        # get sensor coordinates
+        try:
+            spos = os.path.join(mockdir, 'scanner_pos.txt')
+        except Exception as e:
+            raise ValueError(e)
+
+        scan = lad.laod_scan_pos(spos)
+        id = [i.decode("utf-8") for i in scan['scan']]
+        keep = np.array(id) == filename[:2]
+        _, sx, sy, sz = scan[keep][0]
+
+        # sensor coordinates
+        p2 = [sx, sy, sz]
+        idx = np.random.randint(0, len(x), 100, dtype=int)
+
+        ax.scatter3D(x, y, z, c='g', s=1)
+        ax.scatter3D(sx, sy, sz, c='r', s=10)
+
+        # for each LiDAR point, draw a point-like line trhough the sensor
+        for i,j,k in zip(x, y, z):
+            
+            p1 = [i, j, k]
+            ax.plot3D([i, sx], [j, sy], [k, sz], lw=0.1, color=colors[num])
+
+            if tracers:
+                pp = lad.line2points_vect(p1, p2, res=res)
+                px, py, pz = pp.T[0], pp.T[1], pp.T[2]
+                ax.scatter3D(px, py, pz, c='k', s=1)
