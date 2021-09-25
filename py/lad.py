@@ -303,7 +303,7 @@ def get_leaf_angle(points, normals, voxel_size, show=False, norm_avg=True):
             o3d.visualization.draw_geometries([voxel_grid])
 
     else:
-        print('Option: not norms averaged...')
+        # print('Option: not norms averaged...')
         angs = {'avgAngle':[]}
 
         for normal in normals:
@@ -462,6 +462,8 @@ def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2):
         nI = (m3[:,:,i] == 1).sum()
         nP = (m3[:,:,i] == 2).sum()
         _lai = nI/(nI+nP)
+        # print(nI, nP)
+        # _lai = nI/(m3.shape[0] * m3.shape[1])
         alpha = alphas[i]
         # print(1/DeltaH, alpha, _lai)
         # lai.append(_lai)
@@ -555,9 +557,10 @@ def true_angles(file):
 
     return true_angs
 
-def correct_angs(angs):
+def correct_angs(angs, B=False):
 
     thetaL = [i if (i < 90) else (180 - i) for i in angs]
+    if B: thetaL = [i - 65 for i in angs]
 
     return thetaL
 
@@ -711,14 +714,17 @@ savefig=None, text=None, norm_avg=True, downsample=False, weigths=True, voxel_si
         thetaL = correct_angs(angs['avgAngle'])
         ta = correct_angs(ta)
 
-        if savefig is None:
-            _savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
-            _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s.png' %(treename))
-            _savefig_G = os.path.join(resdir, 'G_alpha_theta_%s.png' %(treename))
-        else:
+        if savefig is not None:
+            # _savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
+            # _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s.png' %(treename))
+            # _savefig_G = os.path.join(resdir, 'G_alpha_theta_%s.png' %(treename))
+        # else:
             _savefig = os.path.join(resdir, 'leaf_angle_dist_%s_%s.png' %(treename, savefig))
             _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s_%s.png' %(treename, savefig))
             _savefig_G = os.path.join(resdir, 'G_alpha_theta_%s_%s.png' %(treename, savefig))
+        else:
+            _savefig = None
+            _savefig_k = None
 
         if weigths:
             ws = get_weigths(points, voxel_size=voxel_size_w)
@@ -760,7 +766,7 @@ savefig=None, text=None, norm_avg=True, downsample=False, weigths=True, voxel_si
     else:
         return chis2
 
-def bestfit_pars_la(mockname, norm_avg=True, downsample=False, weigths=True):
+def bestfit_pars_la(mockname, norm_avg=True, downsample=False, weigths=True, savefig=None, downsample_debug=1):
 
     mockdir = os.path.join(_data, mockname)
     resdir_name = '%s_%s' %('results', mockname)
@@ -770,19 +776,20 @@ def bestfit_pars_la(mockname, norm_avg=True, downsample=False, weigths=True):
     # kd3_sr=0.05
     # max_nn=10
     voxel_size_la = 0.1
-    voxel_size_w = 0.01
+
+    voxel_size_w = 0.1
     kd3_sr = 1
     max_nn = 5
 
     pars = {}
     if norm_avg:
         pars['voxel_size_la'] = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
-    pars['voxel_size_w'] = [0.0001, 0.001, 0.01, 0.1, 1]
-    pars['kd3_sr'] = [0.001, 0.01, 0.1, 1.0]
-    pars['max_nn'] = [3, 5, 10, 20, 50, 100]
-    # pars['voxel_size_la'] = [0.01, 0.05, 0.1]
-    # pars['kd3_sr'] = [0.1, 0.5,  1.0]
-    # pars['max_nn'] = [3, 10, 50]
+    # pars['voxel_size_w'] = [0.0001, 0.001, 0.01, 0.1, 1]
+    # pars['kd3_sr'] = [0.001, 0.01, 0.1, 1.0]
+    # pars['max_nn'] = [3, 5, 10, 20, 50, 100]
+    pars['voxel_size_w'] = [0.01, 0.05, 0.1, 0.5, 1]
+    pars['kd3_sr'] = [0.1, 0.5,  1.0, 1.5]
+    pars['max_nn'] = [3, 5, 8, 10, 15]
 
     # Mesh file
     meshfile = os.path.join(mockdir, 'mesh.ply')
@@ -809,11 +816,11 @@ def bestfit_pars_la(mockname, norm_avg=True, downsample=False, weigths=True):
             if key == 'voxel_size_la':
                 chis2 = test_leaf_angle(mockname, par, voxel_size_w, kd3_sr, max_nn, debug=True, norm_avg=norm_avg, downsample=downsample, weigths=weigths)
             elif key == 'voxel_size_w':
-                chis2 = test_leaf_angle(mockname, voxel_size_la, par, kd3_sr, max_nn, debug=True, norm_avg=norm_avg, downsample=downsample, weigths=weigths)
+                chis2 = test_leaf_angle(mockname, voxel_size_la, par, kd3_sr, max_nn, debug=True, norm_avg=norm_avg, downsample=downsample, weigths=weigths, savefig=savefig, downsample_debug=downsample_debug)
             elif key == 'kd3_sr':
-                chis2 = test_leaf_angle(mockname,  voxel_size_la, voxel_size_w, par, max_nn, debug=True, norm_avg=norm_avg, downsample=downsample, weigths=weigths)
+                chis2 = test_leaf_angle(mockname,  voxel_size_la, voxel_size_w, par, max_nn, debug=True, norm_avg=norm_avg, downsample=downsample, weigths=weigths, savefig=savefig, downsample_debug=downsample_debug)
             elif key == 'max_nn':
-                chis2 = test_leaf_angle(mockname,  voxel_size_la, voxel_size_w, kd3_sr, par, debug=True, norm_avg=norm_avg, downsample=downsample, weigths=weigths)
+                chis2 = test_leaf_angle(mockname,  voxel_size_la, voxel_size_w, kd3_sr, par, debug=True, norm_avg=norm_avg, downsample=downsample, weigths=weigths, savefig=savefig, downsample_debug=downsample_debug)
             else:
                 raise ValueError('%s is not a valid parameter' %(key))
 
@@ -1024,7 +1031,7 @@ def get_lad(mockname, res=0.05, debug=True, downsample_debug=None, voxel_size=0.
             v = np.array(j) - np.array(i)
             # beam unitary vector
             uv = v / np.linalg.norm(v)
-            bia.append(vecttoangle([0, 0, 1], uv))
+            bia.append(vecttoangle([0, 0, 1], -uv))
 
 
         # alphas_k = alpha_k(bia, voxk, lia, ws, resdir)
@@ -1037,20 +1044,30 @@ def get_lad(mockname, res=0.05, debug=True, downsample_debug=None, voxel_size=0.
 
     return m3att, meshfile, bia, voxk, lia, ws, resdir
 
-def alpha_k(bia, voxk, lia, ws, resdir, show=False):
+def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_true_lia=False):
 
     colors = plt.cm.jet(np.linspace(0,1,len(set(voxk))))
     # uv = beam_direction(beam_angles.T[0], beam_angles.T[1], scan_inc)
     
-    bins = np.linspace(0, 90, int(90/1)) # Don't change this!!!
+    # bins = np.linspace(0, 90, int(90/1)) # Don't change this!!!
+    bins = np.linspace(0, 90, 90) # Don't change this!!!
+
     weights = 1/ws
-    h, x = np.histogram(lia, bins=bins, weights=weights, density=True)
+
+    if use_true_lia:
+        ta = true_angles(meshfile)
+        ta = correct_angs(ta)
+        h, x = np.histogram(lia, bins=bins, density=True)
+    else:
+        h, x = np.histogram(lia, bins=bins, weights=weights, density=True)
+    
     thetaLq = (x[:-1]+x[1:])/2
-    alpha = [np.cos(np.radians(i))/Gtheta(i, thetaLq, h) for i in range(90)]
+    alpha = [np.cos(np.radians(i))/Gtheta(i, thetaLq, h) for i in bins]
     alpha_f = lambda theta: np.cos(np.radians(theta))/Gtheta(theta, thetaLq, h)
 
     bia_ = bia
-    bia = np.array(correct_angs(np.array(bia_)))
+    bia = np.array(correct_angs(np.array(bia_), B=False))
+    # bia = np.array(np.abs(bia_))
     bamin, bamax = np.percentile(bia, (0.3,99.7))
     ba = np.linspace(bamin, bamax, len(set(voxk)))
 
@@ -1118,17 +1135,21 @@ def alpha_k(bia, voxk, lia, ws, resdir, show=False):
                 label = None
             plt.plot(np.arange(0, 90, 1), alpha_, lw=0.5, color=colors[k], label=label)
             if k == list(set(voxk))[-1]: 
-                plt.plot(np.arange(0, 90, 1), alpha, lw=3, ls='--', color='k', label='all')
+                plt.plot(bins, alpha, lw=3, ls='--', color='k', label='all')
                 plt.axvline(57.5, ls='--', lw=3, color='r', label=r'$\theta_{0}=57.5$')
                 # plt.axvline(scan_inc if scan_inc <= 90 else 180-scan_inc, ls='--', lw=3, color='orange', label=r'$\theta_{S}=%i$' %(scan_inc if scan_inc <= 90 else 180-scan_inc))
                 plt.fill_between(ba, [alpha_f(i) for i in ba], color='yellow', alpha=0.5)
             plt.legend()
         
         # print('k, median = ', k, median)
-        alpha_min = np.cos(np.radians(angi.min()))/Gtheta(angi.min(), thetaLq, h)
-        alpha_max = np.cos(np.radians(angi.max()))/Gtheta(angi.max(), thetaLq, h)
-        # alpha_median = np.cos(np.radians(ba[k]))/Gtheta(ba[k], thetaLq, h)
-        alpha_median = np.cos(np.radians(median))/Gtheta(median, thetaLq, h)
+        if klia:
+            T, H = thetaLq_, h_
+        else:
+            T, H = thetaLq, h
+
+        alpha_min = np.cos(np.radians(angi.min()))/Gtheta(angi.min(), T, H)
+        alpha_max = np.cos(np.radians(angi.max()))/Gtheta(angi.max(), T, H)
+        alpha_median = np.cos(np.radians(median))/Gtheta(median, T, H)
         res.append([k, angi.min(), alpha_min, angi.max(), alpha_max, median, alpha_median])
         # print('k, median, alpha_median', k, median, alpha_median)
 

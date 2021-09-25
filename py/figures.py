@@ -148,12 +148,14 @@ def G_alpha_plot(G_alpha_theta, savefig=None):
 def show_beams(mockname, sample, tracers=False, res=1):
 
     # show sample of beams
-    colors = ['b', 'cyan', 'orange', 'yellow']
+    # colors = ['b', 'cyan', 'orange', 'yellow']
     fig = plt.figure(figsize=(10,10))
     ax = plt.axes(projection='3d')
 
     mockdir = os.path.join(_data, mockname)
     rawdata_files = glob.glob(os.path.join(mockdir, 's*.npy'))
+
+    colors = plt.cm.jet(np.linspace(0,1,len(rawdata_files)))
 
     # Results directory
     resdir_name = '%s_%s' %('results', mockname)
