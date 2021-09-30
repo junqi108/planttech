@@ -166,7 +166,7 @@ def get_all_traces(mockname, res=0.1, debug=False, downsample_debug=1):
 
         scan = laod_scan_pos(spos)
         id = [i.decode("utf-8") for i in scan['scan']]
-        keep = np.array(id) == filename[:2]
+        keep = np.array(id) == filename[:3]
         _, sx, sy, sz = scan[keep][0]
 
         # sensor coordinates
@@ -445,10 +445,15 @@ def Gtheta(theta, thetaLq, gq):
     return np.array(Gtheta_i).sum()
     
 #
-def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2):
+def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2, mean_weights):
     
     ki, kf = kcoord
     # print(kf-ki)
+
+    if mean_weights is not None:
+        betas = mean_weights
+    else:
+        betas = alphas*0 + 1
     
     if kf > m3att.shape[2]:
         raise ValueError('k values cannot be greater than available. Maximum K value is: %i' %(m3att.shape[2]))
@@ -461,27 +466,35 @@ def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2):
         
         nI = (m3[:,:,i] == 1).sum()
         nP = (m3[:,:,i] == 2).sum()
+        n0 = (m3[:,:,i] == 3).sum()
         _lai = nI/(nI+nP)
-        # print(nI, nP)
-        # _lai = nI/(m3.shape[0] * m3.shape[1])
+        # _lai = nI/(nI+nP+n0)
         alpha = alphas[i]
+        beta = betas[i]
         # print(1/DeltaH, alpha, _lai)
         # lai.append(_lai)
-        lai.append(alpha * _lai)
+        lai.append(alpha * beta * _lai)
 #         print(i, nI, nP, nI/(nI+nP))
 #         print(i, nI/(nI+nP), DeltaH)
+
+    # if mean_weights is not None:
+    #     beta = np.mean(mean_weights)
+    # else:
+    #     beta = 1
         
     # LAD = alpha2 * np.mean(alphas) * (1/DeltaH) * np.array(lai).sum()
     LAD = alpha2 * (1/DeltaH) * np.array(lai).sum()
 
 #     print(alpha, 1/DeltaH, np.array(lai).sum(), LAD)
     # print('k, mean alphas: ', kcoord, np.mean(alphas))
-    # print((ki+(kf-ki-1)/2)*voxel_size, LAD)
+    
+    if mean_weights is not None:
+        print((ki+(kf-ki-1)/2)*voxel_size, betas)
 
     return (ki+(kf-ki-1)/2)*voxel_size, LAD
     
 #
-def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2):
+def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2, mean_weights_k=None):
     
     kmax = m3att.shape[2]
     ar = np.arange(0, kmax, kbins)
@@ -497,8 +510,12 @@ def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2):
     for i in kcoords:
         ki, kf = i
         alphas = alphas_k[ki:kf]
+        if mean_weights_k is not None:
+            mean_weights = mean_weights_k[ki:kf]
+        else:
+            mean_weights = None
         # print(i, alphas)
-        h, lad = get_lad_perk(i, m3att, alphas, voxel_size, alpha2)
+        h, lad = get_lad_perk(i, m3att, alphas, voxel_size, alpha2, mean_weights)
         lads.append([h, lad])
         
     return np.array(lads)
@@ -778,18 +795,18 @@ def bestfit_pars_la(mockname, norm_avg=True, downsample=False, weigths=True, sav
     voxel_size_la = 0.1
 
     voxel_size_w = 0.1
-    kd3_sr = 1
-    max_nn = 5
+    kd3_sr = 1.0
+    max_nn = 10
 
     pars = {}
     if norm_avg:
         pars['voxel_size_la'] = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
-    # pars['voxel_size_w'] = [0.0001, 0.001, 0.01, 0.1, 1]
-    # pars['kd3_sr'] = [0.001, 0.01, 0.1, 1.0]
-    # pars['max_nn'] = [3, 5, 10, 20, 50, 100]
-    pars['voxel_size_w'] = [0.01, 0.05, 0.1, 0.5, 1]
-    pars['kd3_sr'] = [0.1, 0.5,  1.0, 1.5]
-    pars['max_nn'] = [3, 5, 8, 10, 15]
+    pars['voxel_size_w'] = [0.0001, 0.001, 0.01, 0.1, 1]
+    pars['kd3_sr'] = [0.001, 0.01, 0.1, 1.0]
+    pars['max_nn'] = [3, 5, 10, 20, 50, 100]
+    # pars['voxel_size_w'] = [0.01, 0.05, 0.1, 0.5, 1]
+    # pars['kd3_sr'] = [0.1, 0.5,  1.0, 1.5]
+    # pars['max_nn'] = [3, 5, 8, 10, 15]
 
     # Mesh file
     meshfile = os.path.join(mockdir, 'mesh.ply')
@@ -1044,6 +1061,196 @@ def get_lad(mockname, res=0.05, debug=True, downsample_debug=None, voxel_size=0.
 
     return m3att, meshfile, bia, voxk, lia, ws, resdir
 
+def pcd_resolution(pcd):
+
+    dist = []
+
+    pcd_tree = o3d.geometry.KDTreeFlann(pcd)
+
+    for i in range(len(pcd.points)):
+        [k, idx, d2] = pcd_tree.search_knn_vector_3d(pcd.points[i], 2)
+        dist.append(d2[1])
+
+    mean = np.mean(np.array(dist))
+
+    return mean
+
+def get_lad20(mockname, debug=True, downsample=None, voxel_size=0.1):
+
+    mockdir = os.path.join(_data, mockname)
+    segtrees_dir_name = 'toy_trees'
+    segtrees_dir = os.path.join(mockdir, segtrees_dir_name)
+
+    # Results directory
+    resdir_name = '%s_%s' %('results', mockname)
+    resdir = os.path.join(mockdir, resdir_name)
+    if not os.path.exists(resdir):
+        os.makedirs(resdir)
+
+    # path of files
+    segtrees_files = glob.glob(os.path.join(segtrees_dir, 'tree_*.npy'))
+    rawdata_files = glob.glob(os.path.join(mockdir, 'toy*.npy'))
+
+    # Mesh file
+    meshfile = os.path.join(mockdir, 'mesh.ply')
+    if os.path.isfile(meshfile):
+        print(meshfile)
+        # ta = lad.true_angles(meshfile)
+        # voxk_mesh = lad.get_voxk_mesh(meshfile, voxel_size=voxel_size_h)
+    else:
+        raise ValueError('No mesh.ply file in %s' %(mockdir))
+
+    if debug:
+        # segtrees_files = segtrees_files[3:4]
+        segtrees_files = segtrees_files[0:1]
+
+    # chis2 = []
+
+    for file in segtrees_files:
+
+        t1 = process_time()
+
+        # Tree name
+        treename = file.split('/')[-1].split('.')[0]
+
+        # Check if attributes are available for this tree
+        attributes_file = os.path.join(mockdir, segtrees_dir_name, 'm3s_%s_%s.npy' %(treename, str(voxel_size)))
+        if os.path.isfile(attributes_file):
+            m3b = np.load(attributes_file)
+        # else:
+        #     raise ValueError('No such file: %s' %(attributes_file))
+
+        # Check if angles and weights are available
+        outdir_angs = os.path.join(mockdir, segtrees_dir_name, 'angles_%s_%s.npy' %(treename, str(1)))
+        outdir_ws = os.path.join(mockdir, segtrees_dir_name, 'weights_%s_%s.npy' %(treename, str(1)))
+
+        # load segmented tree (foliage only) data
+        tree = np.load(file)
+        print('size LPC: \t', len(tree))
+        if downsample is not None:
+            idxlpc = np.random.randint(0, len(tree), int(len(tree) * downsample))
+            tree = tree[idxlpc]
+
+        print('size new LPC: \t', len(tree))
+            
+        # Extract x,y, and z coordinates of foliage point cloud (fpc)
+        points = tree.T[5:8].T
+        # Extract x,y, and z coordinates of sensor responsible for that point
+        Spoints = tree.T[16:19].T
+
+        t2 = process_time()
+        print('Stage 1:', t2-t1)
+
+        t1 = process_time()
+
+        # find atributes
+
+        # get points voxel bounding box
+        pcd = points2pcd(points)
+        mean_distance = pcd_resolution(pcd)
+        print('Mean distance between points: \t', mean_distance)
+        voxp = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
+
+        # Voxelize the beam points with same bounding box dimensions as the points voxel grid
+        # pcd = points2pcd(tracers)
+        # voxb = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, 
+        #                                                                     min_bound=voxp.get_min_bound().reshape(3,1), 
+        #                                                                     max_bound=voxp.get_max_bound().reshape(3,1))
+
+        # Create voxel of plant region
+        width, height, depth = voxp.get_max_bound() - voxp.get_min_bound()
+        # print(width, height, depth)
+        voxs = o3d.geometry.VoxelGrid.create_dense(origin=voxp.origin, color=np.array([0,0,1]), voxel_size=voxel_size, width=width, height=height, depth=depth)
+
+        t2 = process_time()
+        print('Stage 2:', t2-t1)
+
+        t1 = process_time()
+
+        # Get solid voxel grid indexes
+        voxs_idx = get_voxels(voxs)
+
+        # get i,j,k max and min
+        vdict = idx_bounds(voxs_idx, True)
+        ijk_bounds = np.array(list(vdict.values())).reshape(1,6)[0]
+
+        # check that all index (i,j and k) are positive
+        if np.any(ijk_bounds < 0):
+            raise ValueError('Solid voxel grid found negative (i,j,k) values.')
+
+        # create 3D boolean matrix of i,j,k size
+        m3s = np.zeros(np.array(vdict['ijk_max'])+1, dtype=bool)
+        if not os.path.isfile(attributes_file):
+            m3b = np.ones(np.array(vdict['ijk_max'])+1, dtype=bool)
+        print('foliage voxel dimensions: \t', m3s.shape)
+        print('ray tracker voxel dimensions: \t', m3b.shape)
+
+        # Check 3D matrix i,j,k size matches length of solid voxel grid index array: i*j*k == voxs_idx.shape[0]
+        assert np.product(np.array(vdict['ijk_max'])+1) == voxs_idx.shape[0]
+
+        t2 = process_time()
+        print('Stage 3:', t2-t1)
+
+        t1 = process_time()
+
+        # get voxel grid indexes for points and beams voxels
+        voxp_idx = get_voxels(voxp)
+        # voxb_idx = get_voxels(voxb)
+
+        # get rid of voxels outside the plant region
+        voxp_idx = within_bounds(voxp_idx, voxs_idx)
+
+        # fill 3D matrix with True if voxel exist
+        m3p = m3s.copy()
+        for (i,j,k) in voxp_idx:
+            
+            m3p[i][j][k] = True
+            
+        print('Number of voxels ocupied by points cloud: \t %i' %(m3p.sum()))
+
+        # m3b = m3s.copy()
+        # for (i,j,k) in voxb_idx:
+                
+        #     m3b[i][j][k] = True
+            
+        print('Number of voxels ocupied by beam points cloud: \t %i' %(m3b.sum()))
+        print('Total number of voxels in plant regions: \t %i' %((~m3s).sum()))
+
+        m3att = get_attributes(m3s.shape, m3p, m3b, True)
+
+        t2 = process_time()
+        print('Stage 4:', t2-t1)
+
+        t1 = process_time()
+
+        # get LAD
+        voxk = get_voxk(points, voxel_size)
+        lia = np.load(outdir_angs)
+        ws = np.load(outdir_ws)
+        if downsample is not None:
+            lia = lia[idxlpc]
+            ws = ws[idxlpc]
+
+        # get beam inclination angle (BIA)
+        bia = []
+        for i, j in zip(points, Spoints):
+            # beam vector
+            v = np.array(j) - np.array(i)
+            # beam unitary vector
+            uv = v / np.linalg.norm(v)
+            bia.append(vecttoangle([0, 0, 1], -uv))
+
+
+        # alphas_k = alpha_k(bia, voxk, lia, ws, resdir)
+
+        # lads = get_LADS(m3att, alpha, voxel_size, kbins)
+        # kmax = m3att.shape[2]
+        # lads_mesh = get_LADS_mesh(meshfile, voxel_size, kbins, kmax)
+        t2 = process_time()
+        print('Stage 5:', t2-t1)
+
+    return m3att, meshfile, bia, voxk, lia, ws, resdir, tree
+
 def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_true_lia=False):
 
     colors = plt.cm.jet(np.linspace(0,1,len(set(voxk))))
@@ -1057,7 +1264,7 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
     if use_true_lia:
         ta = true_angles(meshfile)
         ta = correct_angs(ta)
-        h, x = np.histogram(lia, bins=bins, density=True)
+        h, x = np.histogram(ta, bins=bins, density=True)
     else:
         h, x = np.histogram(lia, bins=bins, weights=weights, density=True)
     
@@ -1150,7 +1357,10 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
         alpha_min = np.cos(np.radians(angi.min()))/Gtheta(angi.min(), T, H)
         alpha_max = np.cos(np.radians(angi.max()))/Gtheta(angi.max(), T, H)
         alpha_median = np.cos(np.radians(median))/Gtheta(median, T, H)
-        res.append([k, angi.min(), alpha_min, angi.max(), alpha_max, median, alpha_median])
+
+        # add mean weights per k
+        mean_weights_k = np.mean(weights[keep])
+        res.append([k, angi.min(), alpha_min, angi.max(), alpha_max, median, alpha_median, mean_weights_k])
         # print('k, median, alpha_median', k, median, alpha_median)
 
     if show:
