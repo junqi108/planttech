@@ -139,7 +139,7 @@ def correct_angs(angs):
 
 def get_weigths(points, voxel_size=0.5):
 
-    pcd = points2pcd(points)
+    pcd = loads.points2pcd(points)
     voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
     voxel = []
 
@@ -167,7 +167,7 @@ def get_weigths(points, voxel_size=0.5):
     return ws
 
 def leaf_angle(points, mockname, treename, voxel_size_w, kd3_sr, max_nn, save=False,
-savefig=None, text=None, downsample=False, weigths=True, voxel_size_h=1):
+savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1):
 
     mockdir = os.path.join(_data, mockname)
     resdir = os.path.join(mockdir, 'lia')
@@ -195,9 +195,9 @@ savefig=None, text=None, downsample=False, weigths=True, voxel_size_h=1):
     thetaL = correct_angs(angs['avgAngle'])
     ta = correct_angs(ta)
 
-    if savefig is not None:
-        _savefig = os.path.join(resdir, 'leaf_angle_dist_%s_%s.png' %(treename, savefig))
-        _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s_%s.png' %(treename, savefig))
+    if savefig:
+        _savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
+        _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s.png' %(treename))
     else:
         _savefig = None
         _savefig_k = None
@@ -293,3 +293,33 @@ def bestfit_pars_la(points, mockname, treename, weigths=True):
     np.save(outfile, res)
 
     return res
+
+def best_fit_pars_plot(res, treename, mockname, savefig=None):
+
+    pars = ['voxel_size_w', 'kd3_sr', 'max_nn']
+
+    fig = plt.figure(figsize=(15, 4*len(pars)))
+
+    for num, par in enumerate(pars):
+
+        plt.subplot(len(pars),1,num+1)
+
+        x = np.array(res[par])[:,1].astype('float')
+        y = np.array(res[par])[:,2].astype('float')
+
+        if par in ['voxel_size_w', 'kd3_sr']:
+            plt.semilogx(x, y, lw=3, marker='*')
+        else:
+            plt.plot(x, y, lw=3, marker='*')
+
+        plt.axvline(res[par+'_'+'bestfit'], lw=2, ls='--', color='g')
+        
+        plt.xlabel(par)
+        plt.ylabel(r'$\chi^2$')
+
+    if savefig is None:
+
+        mockdir = os.path.join(_data, mockname)
+        savefig = os.path.join(mockdir, 'lia', 'bestfits_pars_%s.png' %(treename))
+
+    plt.savefig(savefig, dpi=200, bbox_inches='tight')

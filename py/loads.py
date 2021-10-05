@@ -116,7 +116,8 @@ def points2pcd(points):
 
 def DF2array(df):
 
-    points = np.vstack((np.array(df['x']), np.array(df['y']), np.array(df['z']))).transpose()
+    # points = np.vstack((np.array(df['x']), np.array(df['y']), np.array(df['z']))).transpose()
+    points = df.to_numpy()
 
     return points
     

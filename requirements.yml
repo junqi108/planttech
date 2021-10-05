@@ -147,4 +147,3 @@ dependencies:
     - threadpoolctl==2.2.0
     - traitlets==5.0.5
     - wcwidth==0.2.5
-    - libgfortran==5.0.0

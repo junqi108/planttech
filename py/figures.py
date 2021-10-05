@@ -52,18 +52,16 @@ def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None):
         maxh = np.array(x[0]).max()
         box = dict(facecolor='green', edgecolor='black', boxstyle='round,pad=0.5', alpha=0.3)
         textres = '$\chi^2=%.4f$ \n weights=%s' %(chi2, ws.any())
-        plt.text(40, maxh-maxh/5, textres, size=12, bbox=box)
+        plt.text(40, maxh+maxh/7, textres, size=10, bbox=box)
 
     if text is not None:
         maxh = np.array(x[0]).max()
         box = dict(facecolor='green', edgecolor='black', boxstyle='round,pad=0.5', alpha=0.3)
-        plt.text(0, maxh-maxh/5, text, size=12, bbox=box)
-
-    # plt.axvline(35, c='r', label=r'$\theta_{L}=35$')
-    # plt.axvline(180-35, c='r', ls='--', label=r'$\theta_{L}=180-35$')
+        plt.text(0, maxh+maxh/10, text, size=10, bbox=box)
 
     plt.ylabel(r'Frecuency')
     plt.xlabel(r'$\theta_{L}$')
+    plt.ylim(0, maxh+maxh/3)
 
     # 
     plt.ioff()

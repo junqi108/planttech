@@ -15,7 +15,6 @@ import itertools
 from tqdm import tqdm
 
 import figures
-import loads
 import lad
 
 __author__ = 'Omar A. Ruiz Macias'
@@ -118,27 +117,119 @@ def get_matPR(vox, voxel_size):
 
     return m3s, voxs
 
+def intercept(p1, p2, boxPR, voxel_size, ax, boxes_test, show=False):
 
-def intercept(ray, boxPR, voxel_size):
+    line = pyrr.line.create_from_points(p1, p2, dtype=None)
+    ray = pyrr.ray.create_from_line(line)
+
+    res = pyrr.geometric_tests.ray_intersect_aabb(ray, boxPR)
+
+    if show:
+        ax.scatter3D(*res, c='k', s=10)
+
+    if res is not None:
+
+        boxes_reached = split_BB(boxPR, voxel_size)
+
+        marks = 99
+        count = 0
+        # for i in range(2):
+        while marks > 0:
+            # boxes = []
+            # for box in boxes_reached:
+            # print(i, len(boxes_reached))
+            boxes = [box for box in boxes_reached if pyrr.geometric_tests.ray_intersect_aabb(ray, box) is not None]
+                # res = pyrr.geometric_tests.ray_intersect_aabb(ray, box)
+                # if res is not None:
+                #     boxes.append(box)
+            boxes_reached = []
+            marks = 0
+
+
+            boxes_ = [split_BB(box, voxel_size) for box in boxes]
+            marks = [len(i) - 1 for i in boxes_]
+            marks = np.array(marks).sum()
+            boxes_reached =  [j for i in boxes_ for j in i]
+
+            # for box in boxes:
+            #     # print(box)
+            #     boxes_ = split_BB(box, voxel_size)
+            #     marks += len(boxes_) - 1
+            #     # marks += mark
+            #     for j in boxes_:
+            #         boxes_reached.append(j)
+            
+            # print('marks: ', marks)
+            # print(len(boxes_reached))
+            # print(count)
+
+            count += 1
+
+        # boxes_reached = [box for box in boxes_test if pyrr.geometric_tests.ray_intersect_aabb(ray, box) is not None]
+
+
+        # print('counter: ', count)
+        if show:
+
+            for box in boxes:
+
+                minBB, maxBB = box
+                minBB = np.array(minBB)
+                maxBB = np.array(maxBB)
+                width, height, depth = maxBB - minBB
+                # plot bounding box
+                positions = [(minBB[0], minBB[1], minBB[2])]
+                sizes = [(width, height, depth)]
+                pc = plotCubeAt2(positions,sizes,colors=[0,1,0,0.4], edgecolor="k")
+                ax.add_collection3d(pc)
+
+            ax.plot(*line.T.tolist())
+            ax.scatter3D(*p1, c='g', s=10)
+
+    else:
+
+        boxes_reached = []
+
+    return boxes_reached
+
+def intercept2(ray, boxPR, voxel_size, stop):
 
     boxes_reached = split_BB(boxPR, voxel_size)
 
     marks = 99
     count = 0
 
-    while marks > 0:
+    if stop is not None:
 
-        boxes = [box for box in boxes_reached if pyrr.geometric_tests.ray_intersect_aabb(ray, box) is not None]
+        for i in range(stop-1):
 
-        boxes_reached = []
-        marks = 0
+            boxes = [box for box in boxes_reached if pyrr.geometric_tests.ray_intersect_aabb(ray, box) is not None]
 
-        boxes_ = [split_BB(box, voxel_size) for box in boxes]
-        marks = [len(i) - 1 for i in boxes_]
-        marks = np.array(marks).sum()
-        boxes_reached =  [j for i in boxes_ for j in i]
+            boxes_reached = []
+            # marks = 0
 
-        count += 1
+            boxes_ = [split_BB(box, voxel_size) for box in boxes]
+            # marks = [len(i) - 1 for i in boxes_]
+            # marks = np.array(marks).sum()
+            boxes_reached =  [j for i in boxes_ for j in i]
+
+            count += 1
+
+    else:
+
+        while marks > 0:
+
+            boxes = [box for box in boxes_reached if pyrr.geometric_tests.ray_intersect_aabb(ray, box) is not None]
+
+            boxes_reached = []
+            marks = 0
+
+            boxes_ = [split_BB(box, voxel_size) for box in boxes]
+            marks = [len(i) - 1 for i in boxes_]
+            marks = np.array(marks).sum()
+            boxes_reached =  [j for i in boxes_ for j in i]
+
+            count += 1
 
     return boxes_reached
 
@@ -248,18 +339,7 @@ def reached_in_stop(boxes_stop_dict, boxes_reached, m3stop):
     
     return m3_
 
-def prAABB(points, voxel_size):
-
-    # get bounding box of plant region
-    pcd = loads.points2pcd(points)
-    voxPR = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
-    maxBB = voxPR.get_max_bound()
-    minBB = voxPR.get_min_bound()
-
-    return voxPR, minBB, maxBB
-
-
-def mainOLD(mockname, voxel_size, downsample=None, sample=None, stop=None, show=False):
+def main(mockname, voxel_size, downsample=None, sample=None, stop=None, show=False):
 
     mockdir = os.path.join(_data, mockname)
     spos = os.path.join(mockdir, 'scanner_pos.txt')
@@ -465,82 +545,3 @@ def PCdensity(mockname, voxel_size):
     print('# pass trhough PR: \t', Npt)
 
     return Nipr, Nopr, Nlpc, Npt, volume
-
-def main(points, sensors, pointsPR, voxel_size, resdir, treename, show=False):
-
-    voxPR, minBB, maxBB = prAABB(pointsPR, voxel_size)
-    width, height, depth = maxBB - minBB
-
-    # Get 3D-boolean-array of plant region dimmensions and solid voxel
-    m3s, voxs = get_matPR(vox=voxPR, voxel_size=voxel_size)
-    totvox = (~m3s).sum()
-    AABB2vgidx = lambda boxes: [voxs.get_voxel(pyrr.aabb.centre_point(box)).tolist() for box in boxes]
-    # create BB for ray interception
-    boxPR = pyrr.aabb.create_from_bounds(minBB, maxBB)
-    m3count = np.full_like(m3s, 0, dtype=int)
-
-    outdir = os.path.join(resdir, 'm3s_%s_%s.npy' %(treename, str(voxel_size)))
-    outdir_count = os.path.join(resdir, 'm3count_%s_%s.npy' %(treename, str(voxel_size)))
-
-    if show:
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        for ss in np.unique(sensors, axis=0):
-            ax.scatter3D(*ss, color='r', s=20, marker='*')
-
-        positions = [(minBB[0], minBB[1], minBB[2])]
-        sizes = [(width, height, depth)]
-        pc = plotCubeAt2(positions,sizes,colors=[1,0,0,0.2], edgecolor="k")
-        ax.add_collection3d(pc)
-
-        ax.set_xlim([-18,18])
-        ax.set_ylim([-18,18])
-        ax.set_zlim([0,20])
-    else:
-        ax = None
-
-    for p1, p2 in tqdm(zip(points, sensors)):
-
-        line = pyrr.line.create_from_points(p1, p2, dtype=None)
-        ray = pyrr.ray.create_from_line(line)
-        res = pyrr.geometric_tests.ray_intersect_aabb(ray, boxPR)
-
-        if res is not None:
-
-            boxes = intercept(ray, boxPR, voxel_size)
-
-            idx = np.array(AABB2vgidx(boxes))
-            m3s[idx.T[0], idx.T[1], idx.T[2]] = True
-            m3count[idx.T[0], idx.T[1], idx.T[2]] += 1
-
-            if show:
-
-                for box in boxes:
-
-                    minBB, maxBB = box
-                    minBB = np.array(minBB)
-                    maxBB = np.array(maxBB)
-                    width, height, depth = maxBB - minBB
-                    # plot bounding box
-                    positions = [(minBB[0], minBB[1], minBB[2])]
-                    sizes = [(width, height, depth)]
-                    pc = plotCubeAt2(positions,sizes,colors=[0,1,0,0.4], edgecolor="k")
-                    ax.add_collection3d(pc)
-
-                ax.plot(*line.T.tolist())
-                ax.scatter3D(*p1, c='g', s=10)
-                ax.scatter3D(*res, c='k', s=10)
-
-    if show: 
-        plt.show()
-
-    print('tot vox: \t %i' %(totvox))
-    print('voxels hitted: \t %i' %(m3s.sum()))
-    print('Percentage of voxels hitted by beam: %.2f' %(m3s.sum()/totvox))
-
-    np.save(outdir, m3s)
-    np.save(outdir_count, m3count)
-
-    return m3s, m3count
