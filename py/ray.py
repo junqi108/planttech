@@ -361,6 +361,7 @@ def main(mockname, voxel_size, downsample=None, sample=None, stop=None, show=Fal
     width, height, depth = maxBB - minBB
 
     outdir = os.path.join(segtrees_dir, 'm3s_%s_%s.npy' %(treename, str(voxel_size)))
+    outdir_count = os.path.join(segtrees_dir, 'm3count_%s_%s.npy' %(treename, str(voxel_size)))
 
     # Get 3D-boolean-array of plant region dimmensions and solid voxel
     m3s, voxs = get_matPR(vox=voxPR, voxel_size=voxel_size)
@@ -368,6 +369,7 @@ def main(mockname, voxel_size, downsample=None, sample=None, stop=None, show=Fal
     AABB2vgidx = lambda boxes: [voxs.get_voxel(pyrr.aabb.centre_point(box)).tolist() for box in boxes]
     # create BB for ray interceptio
     boxPR = pyrr.aabb.create_from_bounds(minBB, maxBB)
+    m3count = np.full_like(m3s, 0, dtype=int)
 
     # fixed quantities
     if stop is not None:
@@ -377,6 +379,7 @@ def main(mockname, voxel_size, downsample=None, sample=None, stop=None, show=Fal
         m3AABB, m3stop = build_matrixes(m3s, boxes_stop_idx, boxes_reached, AABB2vgidx)
         print('Stop quantities done')
     # plot bounding box
+
     if show:
 
         fig = plt.figure()
@@ -454,6 +457,7 @@ def main(mockname, voxel_size, downsample=None, sample=None, stop=None, show=Fal
 
                 idx = np.array(AABB2vgidx(boxes))
                 m3s[idx.T[0], idx.T[1], idx.T[2]] = True
+                m3count[idx.T[0], idx.T[1], idx.T[2]] += 1
 
                 if show:
 
@@ -480,5 +484,64 @@ def main(mockname, voxel_size, downsample=None, sample=None, stop=None, show=Fal
     print('Percentage of voxels hitted by beam: %.2f' %(m3s.sum()/totvox))
 
     np.save(outdir, m3s)
+    np.save(outdir_count, m3count)
 
-    return m3s
+    return m3s, m3count
+
+def PCdensity(mockname, voxel_size):
+
+    mockdir = os.path.join(_data, mockname)
+    spos = os.path.join(mockdir, 'scanner_pos.txt')
+    rawdata_files = glob.glob(os.path.join(mockdir, 's*.npy'))
+    scan = lad.laod_scan_pos(spos)
+    id = [i.decode("utf-8") for i in scan['scan']]
+
+    # get bounding box of plant region
+    segtrees_dir = os.path.join(mockdir, 'toy_trees')
+    segtrees_files = glob.glob(os.path.join(segtrees_dir, 'tree_*.npy'))
+    tree = np.load(segtrees_files[0])
+    pointsPR = tree.T[5:8].T
+    pcd = lad.points2pcd(pointsPR)
+    voxPR = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
+    maxBB = voxPR.get_max_bound()
+    minBB = voxPR.get_min_bound()
+    width, height, depth = maxBB - minBB
+    volume = width * height * depth
+    print('PR volume: \t', volume)
+
+    boxPR = pyrr.aabb.create_from_bounds(minBB, maxBB)
+
+    Nipr = 0
+    Nopr = 0
+    Nlpc = len(tree)
+
+    for file in rawdata_files:
+
+        filename = file.split('/')[-1]
+        df = np.load(file)
+
+        points = df.T[5:8].T
+        keep = np.array(id) == filename[:3]
+        _, sx, sy, sz = scan[keep][0]
+        # sensor coordinates
+        p2 = [sx, sy, sz]
+
+        for p1 in tqdm(points):
+
+            line = pyrr.line.create_from_points(p1, p2, dtype=None)
+            ray = pyrr.ray.create_from_line(line)
+
+            res = pyrr.geometric_tests.ray_intersect_aabb(ray, boxPR)
+
+            if res is not None:
+                Nipr += 1
+            else:
+                Nopr += 1
+
+    Npt = Nipr - Nlpc
+    print('# colide with PR: \t', Nipr)
+    print('# Dont colide with PR: \t', Nopr)
+    print('# colide with leaves: \t', Nlpc)
+    print('# pass trhough PR: \t', Npt)
+
+    return Nipr, Nopr, Nlpc, Npt, volume

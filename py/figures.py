@@ -27,7 +27,7 @@ plt.rc('lines', linewidth=2)
 plt.rc('legend', fontsize=12)    # legend fontsize
 
 
-def angs_dist(angs, true_angles=None, ws=None, downsample_debug=None, savefig=None, text=None):
+def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None):
 
     fig = plt.figure(figsize=(8,5))
 
@@ -51,7 +51,7 @@ def angs_dist(angs, true_angles=None, ws=None, downsample_debug=None, savefig=No
 
         maxh = np.array(x[0]).max()
         box = dict(facecolor='green', edgecolor='black', boxstyle='round,pad=0.5', alpha=0.3)
-        textres = '$\chi^2=%.4f$ \n ds_debug=%i \n weights=%s' %(chi2, downsample_debug, ws.any())
+        textres = '$\chi^2=%.4f$ \n weights=%s' %(chi2, ws.any())
         plt.text(40, maxh-maxh/5, textres, size=12, bbox=box)
 
     if text is not None:
@@ -181,7 +181,7 @@ def show_beams(mockname, sample, tracers=False, res=1):
 
         scan = lad.laod_scan_pos(spos)
         id = [i.decode("utf-8") for i in scan['scan']]
-        keep = np.array(id) == filename[:2]
+        keep = np.array(id) == filename[:3]
         _, sx, sy, sz = scan[keep][0]
 
         # sensor coordinates

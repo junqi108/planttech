@@ -615,14 +615,16 @@ def get_weigths(points, voxel_size=0.5):
     volume = voxel_size**3
     # Point cloud volume density per voxel
     density = counts/volume
+    # print(voxel_size, np.sum(density == 0))
     # Mean volume density
-    mean_density = np.mean(density)
+    mean_density = np.median(density)
+    # print('Mean density: \t', mean_density)
     # Weigth value per voxel
     w = density / mean_density
     # Weigth value per point
     ws = w[idxinv]
 
-    return ws
+    return mean_density
 
 def get_voxk(points, voxel_size=0.5, mesh=False):
 
@@ -1068,12 +1070,13 @@ def pcd_resolution(pcd):
     pcd_tree = o3d.geometry.KDTreeFlann(pcd)
 
     for i in range(len(pcd.points)):
-        [k, idx, d2] = pcd_tree.search_knn_vector_3d(pcd.points[i], 2)
-        dist.append(d2[1])
+        [k, idx, d2] = pcd_tree.search_knn_vector_3d(pcd.points[i], 3)
+        dist.append(d2[2])
 
     mean = np.mean(np.array(dist))
+    std = np.std(np.array(dist))
 
-    return mean
+    return mean, std
 
 def get_lad20(mockname, debug=True, downsample=None, voxel_size=0.1):
 
@@ -1147,8 +1150,9 @@ def get_lad20(mockname, debug=True, downsample=None, voxel_size=0.1):
 
         # get points voxel bounding box
         pcd = points2pcd(points)
-        mean_distance = pcd_resolution(pcd)
+        mean_distance, std = pcd_resolution(pcd)
         print('Mean distance between points: \t', mean_distance)
+        print('STD distance between points: \t', std)
         voxp = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
 
         # Voxelize the beam points with same bounding box dimensions as the points voxel grid
