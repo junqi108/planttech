@@ -252,7 +252,7 @@ def Gtheta(theta, thetaLq, gq):
 
     return np.array(Gtheta_i).sum()
 
-def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_true_lia=False):
+def alpha_k(bia, voxk, lias, ws, resdir, meshfile, figext=None, klia=False, use_true_lia=False):
 
     colors = plt.cm.jet(np.linspace(0,1,len(set(voxk))))
     # uv = beam_direction(beam_angles.T[0], beam_angles.T[1], scan_inc)
@@ -267,7 +267,7 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
         ta = lia.correct_angs(ta)
         h, x = np.histogram(ta, bins=bins, density=True)
     else:
-        h, x = np.histogram(lia, bins=bins, weights=weights, density=True)
+        h, x = np.histogram(lias, bins=bins, weights=weights, density=True)
     
     thetaLq = (x[:-1]+x[1:])/2
     alpha = [np.cos(np.radians(i))/Gtheta(i, thetaLq, h) for i in bins]
@@ -279,7 +279,7 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
     bamin, bamax = np.percentile(bia, (0.3,99.7))
     ba = np.linspace(bamin, bamax, len(set(voxk)))
 
-    if show:
+    if figext is not None:
         fig = plt.figure(figsize=(12,6))
         plt.subplot(1,1,1)
         plt.hist(np.array(bia_), 40, histtype='step', label='pre correction')
@@ -288,10 +288,10 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
         plt.xlabel(r'$\theta$')
         plt.ylabel(r'$Frecuency$')
 
-        savefig = os.path.join(resdir, 'bia.png')
+        savefig = os.path.join(resdir, 'figures','bia_%s.png' %(figext))
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
 
-    if show:
+    if figext is not None:
         fig = plt.figure(figsize=(12,6))
         plt.subplot(1,1,1)
 
@@ -311,12 +311,12 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
 
         plt.xlabel(r'$\theta$')
         plt.ylabel(r'$Frecuency$')
-        savefig = os.path.join(resdir, 'bia_per_k.png')
+        savefig = os.path.join(resdir, 'figures', 'bia_per_k_%s.png' %(figext))
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
 
 
     res = []
-    if show:
+    if figext is not None:
         fig = plt.figure(figsize=(14, 6))
 
     for k in list(set(voxk)):
@@ -325,12 +325,12 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
         angi = bia[keep]
         median = np.median(angi)
 
-        h_, x_ = np.histogram(lia[keep], bins=bins, weights=weights[keep], density=True)
+        h_, x_ = np.histogram(lias[keep], bins=bins, weights=weights[keep], density=True)
         thetaLq_ = (x_[:-1]+x_[1:])/2
         alpha_ = [np.cos(np.radians(i))/Gtheta(i, thetaLq_, h_) for i in range(90)]
         # print('k, height density: ', h_)
 
-        if show:
+        if figext is not None:
             plt.subplot(1,1,1)
             if k == 0 or k == list(set(voxk))[-1]:
                 label = 'k=%i' %(k)
@@ -358,11 +358,143 @@ def alpha_k(bia, voxk, lia, ws, resdir, meshfile, show=False, klia=False, use_tr
         res.append([k, angi.min(), alpha_min, angi.max(), alpha_max, median, alpha_median, mean_weights_k])
         # print('k, median, alpha_median', k, median, alpha_median)
 
-    if show:
+    if figext is not None:
         plt.xlabel(r'$\theta$')
         plt.ylabel(r'$alpha(\theta)$')
 
-        savefig = os.path.join(resdir, 'alphas.png')
+        savefig = os.path.join(resdir, 'figures', 'alphas_%s.png' %(figext))
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
 
     return np.array(res)
+
+def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2, mean_weights):
+    
+    ki, kf = kcoord
+    # print(kf-ki)
+
+    if mean_weights is not None:
+        betas = mean_weights
+    else:
+        betas = alphas*0 + 1
+    
+    if kf > m3att.shape[2]:
+        raise ValueError('k values cannot be greater than available. Maximum K value is: %i' %(m3att.shape[2]))
+    
+    m3 = m3att[:,:,ki:kf]
+    DeltaH = (kf-ki) * voxel_size
+    lai = []
+    
+    for i in range(kf-ki):
+        
+        nI = (m3[:,:,i] == 1).sum()
+        nP = (m3[:,:,i] == 2).sum()
+        n0 = (m3[:,:,i] == 3).sum()
+        _lai = nI/(nI+nP)
+        # _lai = nI/(nI+nP+n0)
+        alpha = alphas[i]
+        beta = betas[i]
+        # print(1/DeltaH, alpha, _lai)
+        # lai.append(_lai)
+        lai.append(alpha * beta * _lai)
+#         print(i, nI, nP, nI/(nI+nP))
+#         print(i, nI/(nI+nP), DeltaH)
+
+    # if mean_weights is not None:
+    #     beta = np.mean(mean_weights)
+    # else:
+    #     beta = 1
+        
+    # LAD = alpha2 * np.mean(alphas) * (1/DeltaH) * np.array(lai).sum()
+    LAD = alpha2 * (1/DeltaH) * np.array(lai).sum()
+
+#     print(alpha, 1/DeltaH, np.array(lai).sum(), LAD)
+    # print('k, mean alphas: ', kcoord, np.mean(alphas))
+    
+    if mean_weights is not None:
+        print((ki+(kf-ki-1)/2)*voxel_size, betas)
+
+    return (ki+(kf-ki-1)/2)*voxel_size, LAD
+    
+#
+def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2, mean_weights_k=None):
+    
+    kmax = m3att.shape[2]
+    ar = np.arange(0, kmax, kbins)
+    kcoords = []
+    lads = []
+
+    for i in range(len(ar)-1):
+        kcoords.append([ar[i],ar[1:][i]])
+
+    kcoords.append([ar[-1], kmax])
+    
+#     print(kcoords)
+    for i in kcoords:
+        ki, kf = i
+        alphas = alphas_k[ki:kf]
+        if mean_weights_k is not None:
+            mean_weights = mean_weights_k[ki:kf]
+        else:
+            mean_weights = None
+        # print(i, alphas)
+        h, lad = get_lad_perk(i, m3att, alphas, voxel_size, alpha2, mean_weights)
+        lads.append([h, lad])
+        
+    return np.array(lads)
+
+def get_LADS_mesh(meshfile, voxel_size, kbins, kmax):
+
+    mesh = o3d.io.read_triangle_mesh(meshfile)
+
+    angles_mesh = lia.true_angles(meshfile)
+    angles_mesh = np.array(lia.correct_angs(angles_mesh))
+    # angles_mesh = np.array(angles_mesh)
+    voxk = np.array(get_voxk_mesh(meshfile, voxel_size=voxel_size))
+    # get surface area
+    sa = mesh.get_surface_area()
+    # Area per triangle
+    area = np.full(len(voxk), np.round(sa/len(voxk), 6))
+
+    # for volume
+    vert = np.asarray(mesh.vertices)
+    pcd = loads.points2pcd(vert)
+    voxel = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    width, height, depth = voxel.get_max_bound() - voxel.get_min_bound()
+
+    ar = np.arange(0, kmax, kbins)
+    kcoords = []
+    lads = []
+
+    for i in range(len(ar)-1):
+        kcoords.append([ar[i],ar[1:][i]-1])
+
+    kcoords.append([ar[-1], kmax-1])
+    # print(set(voxk))
+    lads = []
+
+    for i in kcoords:
+
+        ki, kf = i
+        
+        keep = np.logical_and(voxk >= ki, voxk <= kf)
+        
+        # Area per leaf corrected by its angle with respect to the zenith
+        Aleaf = area[keep]*np.cos(np.radians(angles_mesh[keep]))
+        # plt.hist(np.cos(np.radians(angles_mesh[keep])), 30, label=i)
+        # plt.legend()
+        # plt.show()
+    
+        # Aleaf = area[keep]
+        # Total area in bin
+        A = Aleaf.sum()
+        # get volume
+        volume = width * height * kbins * voxel_size
+        # print(volume)
+
+        #save lad
+        deltaH = (kf - ki)/2
+        lads.append([(i[0]+deltaH)*voxel_size, A/volume])
+        # print(kf, ki)
+        # print(len(i), i[0], deltaH, A/volume)
+
+    return np.array(lads)

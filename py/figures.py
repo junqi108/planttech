@@ -199,3 +199,21 @@ def show_beams(mockname, sample, tracers=False, res=1):
                 pp = lad.line2points_vect(p1, p2, res=res)
                 px, py, pz = pp.T[0], pp.T[1], pp.T[2]
                 ax.scatter3D(px, py, pz, c='k', s=1)
+
+def plot_lads(lads, savefig=None):
+
+    fig = plt.figure(figsize=(4, 6))
+
+    for key, val in lads.items():
+
+        if key == 'Truth':
+            plt.plot(val[0:,1], val[0:,0], marker='s', c='k', label=key)
+        else:
+            plt.plot(val[0:,1], val[0:,0], marker='*', label=key)
+
+    plt.xlabel(r'LAD ($m^2/m^3$)')
+    plt.ylabel(r'Height ($m$)')
+    plt.legend()
+
+    if savefig is not None:
+        plt.savefig(savefig, dpi=200, bbox_inches='tight')
