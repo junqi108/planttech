@@ -5,6 +5,7 @@
 
 # Custom
 invoice/
+toremove/
 .DS_Store
 pdal/
 data/
