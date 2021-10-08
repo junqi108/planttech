@@ -1,0 +1,22 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: chapters/outline
+
+parts:
+  - caption: LiDAR simulation on mockup trees with BLENSOR
+    chapters:
+    - file: chapters/mocktree
+      title: Toy tree and sensor specifications
+    - file: chapters/data
+      title: Data structure
+    - file: chapters/angles
+      title: Leaf Inclination Angle (LIA) estimation
+    - file: chapters/lad
+      title: Leaf Area Density (LAD) estimation
+
+  - caption: Aplication on real Kiwkifruit LiDAR dataset
+    chapters:
+    - file: chapters/kiwi_segmentation
+      title: Tree and leave segmentation

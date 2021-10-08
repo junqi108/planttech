@@ -19,7 +19,7 @@ __email__ = 'omar.ruiz.macias@gmail.com'
 __status__ = 'Dev'
 
 # Global
-basedir = os.path.dirname(os.getcwd())
+basedir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 _py = os.path.join(basedir, 'py')
 _data = os.path.join(basedir, 'data')
 _images = os.path.join(basedir, 'images')
@@ -498,3 +498,8 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax):
         # print(len(i), i[0], deltaH, A/volume)
 
     return np.array(lads)
+
+def see_mesh(meshfile):
+
+    mesh = o3d.io.read_triangle_mesh(meshfile)
+    o3d.visualization.draw_geometries([mesh], mesh_show_wireframe=True)

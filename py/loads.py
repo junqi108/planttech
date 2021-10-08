@@ -15,7 +15,7 @@ __email__ = 'omar.ruiz.macias@gmail.com'
 __status__ = 'Dev'
 
 # Global
-basedir = os.path.dirname(os.getcwd())
+basedir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 _py = os.path.join(basedir, 'py')
 _data = os.path.join(basedir, 'data')
 _images = os.path.join(basedir, 'images')
@@ -32,11 +32,12 @@ def numpy2npy(mockname, downsample=None):
     for file in glob.glob(os.path.join(datapath, 's*.numpy')):
         df = np.loadtxt(file)
         filename = file.split('/')[-1].split('.')[0]
+        print('%s done --> Number of beams: %i' %(file.split('/')[-1], len(df)))
         outfile = os.path.join(_data, mockname, filename)
 
         if downsample is not None:
             keep = np.random.randint(0, len(df), int(len(df) * downsample))
-            print(filename, len(df), len(df[keep]))
+            # print(filename, len(df), len(df[keep]))
             np.save(outfile, df[keep])
         else:
             np.save(outfile, df)
@@ -82,7 +83,7 @@ def npy2pandas(mockname, downsample=None):
             files[filename] = df
             bia = np.full((len(df),3), np.array([sx, sy, sz]))
             bia_pos[filename] = bia
-            print(filename, df.shape, bia.shape)
+            # print(filename, df.shape, bia.shape)
         else:
             print('file %s empty' %(filename))
 
