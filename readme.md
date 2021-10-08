@@ -1,15 +1,31 @@
 
+### *For a full documentation see:* [docs](https://qmxp55.github.io/planttech)
 # Outline
 
-The following include the process to extract the `Leaaf Area Density` (LAD) from a mock point cloud generated in `Blensor` software. This process is splitted in 3 main cores:
+The following include the process to extract the `Leaf Inclination Angle` (LIA) with respect to zenith, the `Leaf Area Index` (LAI), and the `Leaf Area Density` (LAD) of a point cloud (PC). We test our pipeline using a mockup point cloud generated in `Blensor` software. This process is outlined below:
 
 - **LiDAR simulation on mockup trees with BLENSOR**
-- **Data structure**
-- **Leaf Inclination Angle (LIA) estimation**
-- **Leaf Area Density (LAD) estimation**
+    - Toy tree and sensor specifications
+    - Data structure
+    - Leaf Inclination Angle (LIA) estimation
+    - Leaf Area Density (LAD) estimation
+  
+- **Aplication on Kiwkifruit LiDAR dataset**
 
-# Preparation of data
 
-In order to get the LIA and hence the LAD, we need to segmentated the trees and the leaves.
 
-First, we define the name of the directory where the Blensor output data is, in this particular case we will look for directory `test`. Pipeline will look for this directory inside the `data` directory.
+# Instalation
+
+When creating the list of requirements use:
+
+```
+conda env export -n <env-name> --no-builds> requirements.yml
+```
+
+and to create the environment use:
+
+```
+conda env create -f path/to/environment.yml
+```
+
+If getting the issue `ResolvePackageNotFound` just move these packages under 'pip'.

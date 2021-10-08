@@ -118,9 +118,9 @@ That's it! So what we just did? First, with function `loads.npy2pandas()` we loa
 
 outputs from this are:
 
-* `df`: Pandas DF with the entire PC
-* `leaves`: numpy boolean array of PC dimensions with True for Points concerning leaves only
-* `trees`: python dictionary where each entry contains one tree in the form of boolena array with PC dimensions
+- `df`: Pandas DF with the entire PC
+- `leaves`: numpy boolean array of PC dimensions with True for Points concerning leaves only
+- `trees`: python dictionary where each entry contains one tree in the form of boolena array with PC dimensions
 
 Below piece of code shows an example of how to visualize the leaves points from one tree only, this will be know as the `Leaves Point Cloud` (LPC) and is shown in Fig. {numref}`lpc`.
 
