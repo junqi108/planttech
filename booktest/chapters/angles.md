@@ -1,5 +1,7 @@
 # `Leaf Inclination Angle` (LIA) estimation
 
+## Intro
+
 Most functions used in this chapter are in library:
 
 ``` Python
@@ -17,12 +19,15 @@ root
         │   ...
         │   mesh.ply
         │   scanner_pos.txt
+        │   s0100000.npy
+        │   s0200000.npy
+        │   ...
         └───lia
             │   angles_<treename>.npy
             │   weights_<treename>.npy
-            |   leaf_angle_dist_<treename>.png
-            |   leaf_angle_dist_height_<treename>.png
-            |   bestfits_pars_treename>.png
+            │   leaf_angle_dist_<treename>.png
+            │   leaf_angle_dist_height_<treename>.png
+            │   bestfits_pars_treename>.png
 
 ```
 
@@ -36,12 +41,18 @@ The main function that computes the LIA is `lia.leaf_angle()` which uses a KDtre
     
 3. `Range correction`: The results angles run from $0 < \theta < 180$, however we require these to be in the range $0 < \theta < 90$ therefore we transfom those angles $> 90$ with relation:
 
-$$\theta_{L} = 180 - \theta$$
+```{math}
+:label: angcorr
+\theta_{L} = 180 - \theta
+```
 
 4. `Weights correction`: The resulting LIA is biased to PC density and completeness. In order to reduce this biases, we compute weights via voxelization,
 
-$$\eta_{i} = n_{i}/L^{3} \\
-  \bar{\eta} = \frac{1}{N}\sum_{i=0}^{N} \eta{i}$$
+```{math}
+:label:
+\eta_{i} = n_{i}/L^{3} \\
+  \bar{\eta} = \frac{1}{N}\sum_{i=0}^{N} \eta{i}
+```
 
 where $n_{i}$ is the number of points within voxel $i$, $L$ is the voxel size, and $N$ is the total number of voxels, then $\eta_{i}$ is the volume density of voxel $i$, and $\bar{\eta}$ is the mean volume density.
 
@@ -91,10 +102,10 @@ once we find the best-fit parameters we get figure `bestfits_pars_treename>.png`
 
 ```{figure} ../gifs/bestfits_pars_tree_0.png
 ---
-width: 30em
+width: 40em
 name: bestfits_pars
 ---
-`voxel_size_w`, `kd3_sr` and `max_nn` best-fits.
+`voxel_size_w`, `kd3_sr` and `max_nn` search range. The green-dashed line shows the the best-fit where the $\chi^{2}$ is the lowest.
 ```
 
 ```Python

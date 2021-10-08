@@ -54,15 +54,15 @@ The structure looks like,
 root
 |
 └───data
-│   └───test
-│       │   s0100000.numpy
-│       │   s0200000.numpy
-│       │   ...
-│       │   mesh.ply
-│       │   scanner_pos.txt
-│       │   s0100000.npy
-│       │   s0200000.npy
-│       │   ...
+    └───test
+        │   s0100000.numpy
+        │   s0200000.numpy
+        │   ...
+        │   mesh.ply
+        │   scanner_pos.txt
+        │   s0100000.npy
+        │   s0200000.npy
+        │   ...
 ```
 
 
