@@ -1,0 +1,635 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaf Area Density (LAD) estimation &#8212; Towards kiwifruit canopy reconstruction with LiDAR technology</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["\\(", "\\)"]], "displayMath": [["\\[", "\\]"]], "processRefs": false, "processEnvironments": false}})</script>
+    <script async="async" src="https://unpkg.com/thebe@0.5.1/lib/index.js"></script>
+    <script >
+        const thebe_selector = ".thebe"
+        const thebe_selector_input = "pre"
+        const thebe_selector_output = ".output"
+    </script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Data structure of LiDAR" href="kiwi.html" />
+    <link rel="prev" title="Leaf Inclination Angle (LIA) estimation" href="angles.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Towards kiwifruit canopy reconstruction with LiDAR technology</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="outline.html">
+   Outline
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  LiDAR simulation on mockup trees with BLENSOR
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="mocktree.html">
+   Toy tree and sensor specifications
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="data.html">
+   Data structure
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="angles.html">
+   Leaf Inclination Angle (LIA) estimation
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Leaf Area Density (LAD) estimation
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Aplication on real Kiwkifruit LiDAR dataset
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwi.html">
+   The Data structure of LiDAR
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/chapters/lad.md"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.md</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/executablebooks/jupyter-book"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        <a class="issues-button"
+            href="https://github.com/executablebooks/jupyter-book/issues/new?title=Issue%20on%20page%20%2Fchapters/lad.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#intro">
+   Intro
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#computing-n-p-k">
+   Computing
+   <span class="math notranslate nohighlight">
+    \(n_{P}(k)\)
+   </span>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#computing-n-i-k">
+   Computing
+   <span class="math notranslate nohighlight">
+    \(n_{I}(k)\)
+   </span>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#computing-alpha-theta">
+   Computing
+   <span class="math notranslate nohighlight">
+    \(\alpha(\theta)\)
+   </span>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#estimate-lad">
+   Estimate LAD
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#final-structure">
+   final structure
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="leaf-area-density-lad-estimation">
+<h1><code class="docutils literal notranslate"><span class="pre">Leaf</span> <span class="pre">Area</span> <span class="pre">Density</span></code> (LAD) estimation<a class="headerlink" href="#leaf-area-density-lad-estimation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h2>
+<p>Most functions used in this chapter are in library:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">lad</span>
+</pre></div>
+</div>
+<p>The LAD method implemented here uses the <code class="docutils literal notranslate"><span class="pre">Voxel</span> <span class="pre">3D</span> <span class="pre">contact-bases</span> <span class="pre">frecuency</span></code> method first introduced by <code class="docutils literal notranslate"><span class="pre">HOSOI</span> <span class="pre">AND</span> <span class="pre">OMASA:</span> <span class="pre">VOXEL-BASED</span> <span class="pre">3-D</span> <span class="pre">MODELING</span> <span class="pre">OF</span> <span class="pre">INDIVIDUAL</span> <span class="pre">TREES</span> <span class="pre">FOR</span> <span class="pre">ESTIMATING</span> <span class="pre">LAD</span></code>.</p>
+<p>The model looks like:</p>
+<div class="math notranslate nohighlight" id="equation-chapters-lad-0">
+<span class="eqno">(3)<a class="headerlink" href="#equation-chapters-lad-0" title="Permalink to this equation">¶</a></span>\[LAD(h, \Delta H) = \frac{1}{\Delta H} \sum_{k=m_{h}}^{m_{h}+\Delta H} l(k),\]</div>
+<p>where,</p>
+<div class="math notranslate nohighlight" id="equation-chapters-lad-1">
+<span class="eqno">(4)<a class="headerlink" href="#equation-chapters-lad-1" title="Permalink to this equation">¶</a></span>\[\begin{split}l(k) = \alpha(\theta)N(k) \\
+    = \alpha(\theta) \cdot \frac{n_{I}(k)}{n_{I}(k) + n_{P}(k)}.\end{split}\]</div>
+<p><span class="math notranslate nohighlight">\(l(k)\)</span> is the <code class="docutils literal notranslate"><span class="pre">Leaf</span> <span class="pre">Area</span> <span class="pre">Index</span></code> (LAI) of the kth horizontal layer of the voxel array within a plant region, <span class="math notranslate nohighlight">\(\Delta H\)</span> is the horizontal layer thickness, and <span class="math notranslate nohighlight">\(m_{h}\)</span> and <span class="math notranslate nohighlight">\(m_{h}+\Delta H\)</span> are the voxel coordinates on the vertical axis equivalent to height <span class="math notranslate nohighlight">\(h\)</span> and <span class="math notranslate nohighlight">\(h+\Delta H\)</span> in orthogonal coordinates (<span class="math notranslate nohighlight">\(h = \Delta k \times m_{h}\)</span>). The LAI of the kth horizontal layer <span class="math notranslate nohighlight">\(l(k)\)</span> is the product of the contact frequency <span class="math notranslate nohighlight">\(N(k)\)</span> of laser beams in the kth layer and the coefficient <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span>, which corrects for leaf inclination at laser incident zenith angle <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(n_{I}(k)\)</span> is the number of voxels where the laser beams is intercepted by the kth layer, <span class="math notranslate nohighlight">\(n_{P}(k)\)</span> is the number of voxels where the laser beams passed through the kth layer, and <span class="math notranslate nohighlight">\(n_{I}(k) + n_{P}(k)\)</span> is the total number of voxels where the incident laser beams reach the kth layer.</p>
+<p>Despite the complexity of this method, it requieres only one parameter, the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code>. We will introduce a second parameter, the <code class="docutils literal notranslate"><span class="pre">downsample</span></code> whose importance will be explained later. The main steps towards LAD estimation are:</p>
+<ol class="simple">
+<li><p>Computing <span class="math notranslate nohighlight">\(n_{P}(k)\)</span></p></li>
+<li><p>Computing <span class="math notranslate nohighlight">\(n_{I}(k)\)</span></p></li>
+<li><p>Computing <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span></p></li>
+<li><p>Estimate LAD</p></li>
+</ol>
+<p>For this example, we will usea a <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> = 0.2 and <code class="docutils literal notranslate"><span class="pre">downsample</span></code> = 0.05 which means that we downsample our whole data to only <span class="math notranslate nohighlight">\(5\%\)</span>. A reminder that as well as in for the LIA, the following process is per tree.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">downsample</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="n">voxel_size</span> <span class="o">=</span> <span class="mf">0.2</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">downsample</span></code> step is very important as we notice that there’s a relation between <code class="docutils literal notranslate"><span class="pre">downsample</span></code> and the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> that does not seem to affect the estimation of the LAD. This relationship can be seen in figure <a class="reference internal" href="#downsample-samples"><span class="std std-numref">Fig. 8</span></a> where the lower the <code class="docutils literal notranslate"><span class="pre">downsample</span></code> is, the higher the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> needs to be.</p>
+<div class="figure align-default" id="downsample-samples">
+<a class="reference internal image-reference" href="../_images/lads_downsample_samples.png"><img alt="../_images/lads_downsample_samples.png" src="../_images/lads_downsample_samples.png" style="width: 40em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 8 </span><span class="caption-text">LAD estimation (blue and red) vs Truth (black) as a function of height. From left to right figure shows estimated LADs for a <code class="docutils literal notranslate"><span class="pre">downsample</span></code> of <span class="math notranslate nohighlight">\(75 \%\)</span>, <span class="math notranslate nohighlight">\(50 \%\)</span>, <span class="math notranslate nohighlight">\(25 \%\)</span>, and <span class="math notranslate nohighlight">\(10 \%\)</span> respectively. All estimations use a <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> of <span class="math notranslate nohighlight">\(0.1\)</span>.ret0</span><a class="headerlink" href="#downsample-samples" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="important admonition">
+<p class="admonition-title">To-Do</p>
+<p>Results on LAD are dependant of the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> and hence, the point cloud density. Currently we rely on the <em>Truth LAD</em> to find the correct <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code>. For a real scenario we would like to find the correct value of <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> based on the PC density or any other intrinsic parameter of the point cloud.</p>
+</div>
+</div>
+<div class="section" id="computing-n-p-k">
+<span id="sec-np"></span><h2>Computing <span class="math notranslate nohighlight">\(n_{P}(k)\)</span><a class="headerlink" href="#computing-n-p-k" title="Permalink to this headline">¶</a></h2>
+<p>Seeing where the beam pass through in the voxelize <code class="docutils literal notranslate"><span class="pre">Plant</span> <span class="pre">Region</span></code> (PR) is a tipycal ray tracing problem and it’s reduced to see whether the ray hit or not an axis align bounding box (AABB).</p>
+<p>The below module grabs the requiered downsample percentge of the data with a random subsample and if it’s the first time we ran this, it will create the directory <code class="docutils literal notranslate"><span class="pre">lad_&lt;downsmple&gt;</span></code>. All the subsequent results will be stored inside this directory. The first time a particular downsample is ran, it will store the file <code class="docutils literal notranslate"><span class="pre">inds.npy</span></code> containing a boolean array with size of the pandas DF where True being the selected random subsample requested. If we change the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> but not the <code class="docutils literal notranslate"><span class="pre">downsample</span></code>, then the below module will look first for the <code class="docutils literal notranslate"><span class="pre">inds.npy</span></code> instead of searching for another random subsample, this to maintain uniformity between different voxels sizes approaches.</p>
+<p>The function <code class="docutils literal notranslate"><span class="pre">main</span></code> does the magic here, it has to be ran per tree and requires 6 input parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">points</span></code>: <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span> and <span class="math notranslate nohighlight">\(z\)</span> coordinates from the downsample data in the form of numpy array.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensors</span></code>: <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span> and <span class="math notranslate nohighlight">\(z\)</span> coordinates of sensor responsible from each point in <code class="docutils literal notranslate"><span class="pre">points</span></code> parameter above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pointsPR</span></code>: <code class="docutils literal notranslate"><span class="pre">points</span></code> above filtered to the LPC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">voxel_size</span></code>: Voxel Size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resdir</span></code>: Name of output directory for the specific <code class="docutils literal notranslate"><span class="pre">downsample</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">treename</span></code>: Name/index of tree.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">pointsPR</span></code> is require to get the same voxelization dimensions as in <span class="math notranslate nohighlight">\(n_{I}\)</span>.</p>
+</div>
+<p>This function returns two files:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">m3s_&lt;treename&gt;_&lt;voxel_size&gt;.npy</span></code>: numpy boolean 3D-array with number of voxels dimensions. True if a beam hit the voxel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m3count_&lt;treename&gt;_&lt;voxel_size&gt;.npy</span></code>: numpy 3D-array with number of voxels dimensions. Each entry contains the number of beams that passed trhough that voxel.</p></li>
+</ul>
+<div class="important admonition">
+<p class="admonition-title">To-Do</p>
+<p>Note that this is the slowest module of the entire pipeline, taking up to 5 minutes for a sample of 10,000 beams. This can be improved easlily if binding with a <code class="docutils literal notranslate"><span class="pre">C++</span></code> ray AABB module instead.</p>
+</div>
+<p>Below we show the piece of code that computes this,</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">POINTS</span> <span class="o">=</span> <span class="n">loads</span><span class="o">.</span><span class="n">DF2array</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]])</span>
+<span class="n">SENSORS</span> <span class="o">=</span> <span class="n">loads</span><span class="o">.</span><span class="n">DF2array</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;sx&#39;</span><span class="p">,</span> <span class="s1">&#39;sy&#39;</span><span class="p">,</span> <span class="s1">&#39;sz&#39;</span><span class="p">]])</span>
+
+<span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">mockname</span><span class="p">,</span> <span class="s1">&#39;lad_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">downsample</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">resdir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">resdir</span><span class="p">)</span>
+
+    <span class="n">outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;inds.npy&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;inds file already exists for donwnsample of </span><span class="si">%.3f</span><span class="s1"> at </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">downsample</span><span class="p">,</span> <span class="n">outdir</span><span class="p">))</span>
+
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+        <span class="n">sensors</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;inds not been created yet for donwnsample of </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">downsample</span><span class="p">))</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">*</span> <span class="n">downsample</span><span class="p">))</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">inds</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+        <span class="n">sensors</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">inds</span><span class="p">)</span>
+
+<span class="k">else</span><span class="p">:</span>
+
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">mockname</span><span class="p">,</span> <span class="s1">&#39;lad&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">resdir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">resdir</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">sample</span><span class="p">))</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">sensors</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trees</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+    <span class="n">inPR</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+    <span class="n">pointsPR</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inPR</span><span class="p">]</span>
+    <span class="n">m3s</span><span class="p">,</span> <span class="n">m3count</span><span class="o">=</span> <span class="n">rayt</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">sensors</span><span class="p">,</span> <span class="n">pointsPR</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">resdir</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">)</span>
+</pre></div>
+</div>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><div class="figure align-default" id="ray-sample">
+<a class="reference internal image-reference" href="../_images/ray.png"><img alt="../_images/ray.png" src="../_images/ray.png" style="width: 18em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 9 </span><span class="caption-text">Escheme of ray passing through the <code class="docutils literal notranslate"><span class="pre">plant</span> <span class="pre">region</span></code> which corresponds to the red parallelepiped. The red point shows the ray’s departure and the green point the ray’s end.</span><a class="headerlink" href="#ray-sample" title="Permalink to this image">¶</a></p>
+</div>
+</p></td>
+<td><p><div class="figure align-default" id="ray-sample-gif">
+<a class="reference internal image-reference" href="../_images/ray.gif"><img alt="../_images/ray.gif" src="../_images/ray.gif" style="width: 18em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 10 </span><span class="caption-text">Zoom in of ray trajectory scheme. The green cubes as the voxels hitted by the ray. Voxel size is <span class="math notranslate nohighlight">\(0.2\)</span>.</span><a class="headerlink" href="#ray-sample-gif" title="Permalink to this image">¶</a></p>
+</div>
+</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="computing-n-i-k">
+<span id="sec-ni"></span><h2>Computing <span class="math notranslate nohighlight">\(n_{I}(k)\)</span><a class="headerlink" href="#computing-n-i-k" title="Permalink to this headline">¶</a></h2>
+<p>The <span class="math notranslate nohighlight">\(n_{I}\)</span> per voxel is computed in function <code class="docutils literal notranslate"><span class="pre">lad.compute_attributes()</span></code>. It essentialy voxelize the LPC to get the PR dimensions (which have to be the same as in <span class="math notranslate nohighlight">\(n_{P}\)</span>). Then, for a numpy boolean 3D-array with voxelize PR dimensions, we fill it with True if there’s a point in the voxel.</p>
+<p>This function looks for previous <code class="docutils literal notranslate"><span class="pre">m3s_&lt;treename&gt;_&lt;voxel_size&gt;.npy</span></code> result and get the attributes in the form of the same size numpy 3D-array (<code class="docutils literal notranslate"><span class="pre">m3att</span></code>). The attributes are:</p>
+<ul class="simple">
+<li><p>1 if any LPC in that voxel</p></li>
+<li><p>2 if any beam pass trhough that  voxel</p></li>
+<li><p>3 if none of previous</p></li>
+</ul>
+<p>It requires 4 input parameters <code class="docutils literal notranslate"><span class="pre">pointsPR</span></code>, <code class="docutils literal notranslate"><span class="pre">resdir</span></code>, <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code>, <code class="docutils literal notranslate"><span class="pre">treename</span></code> which were defined in section <a class="reference internal" href="#sec-np"><span class="std std-ref">Computing n_{P}(k)</span></a>. It returns the attributes numpy 3D-array.</p>
+</div>
+<div class="section" id="computing-alpha-theta">
+<h2>Computing <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span><a class="headerlink" href="#computing-alpha-theta" title="Permalink to this headline">¶</a></h2>
+<p><span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> is expressed in terms of <span class="math notranslate nohighlight">\(G(\theta)\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-chapters-lad-2">
+<span class="eqno">(5)<a class="headerlink" href="#equation-chapters-lad-2" title="Permalink to this equation">¶</a></span>\[\alpha(\theta) = \frac{\cos(\theta)}{G(\theta)},\]</div>
+<p>where <span class="math notranslate nohighlight">\(G(\theta)\)</span> is the mean projection of a unit leaf area on a plane perpendicular to the direction of the laser beam. This quantity is determined with the assumption that leaves are positioned symmetrically with respect to the azimuth anc can be represented as:</p>
+<div class="math notranslate nohighlight" id="equation-chapters-lad-3">
+<span class="eqno">(6)<a class="headerlink" href="#equation-chapters-lad-3" title="Permalink to this equation">¶</a></span>\[G(\theta) =  \sum_{q=1}^{T_{q}} g(q) S(\theta, \theta_{L}(q))\]</div>
+<p>where <span class="math notranslate nohighlight">\(S(\theta, \theta_{L}(q))\)</span> is expresed in terms of the leaf inclination angle (LIA) <span class="math notranslate nohighlight">\(\theta_{L}\)</span> (the zenith angle of the normal to the leaf surface), and <span class="math notranslate nohighlight">\(\theta\)</span> is the laser-beam incident zenith angle:</p>
+<div class="math notranslate nohighlight" id="equation-chapters-lad-4">
+<span class="eqno">(7)<a class="headerlink" href="#equation-chapters-lad-4" title="Permalink to this equation">¶</a></span>\[S(\theta, \theta_{L}) = \cos\theta \cos \theta_{L}, \hspace{.5cm} \textrm{for } \theta \leq \pi/2 - \theta_{L}\]</div>
+<div class="math notranslate nohighlight" id="equation-chapters-lad-5">
+<span class="eqno">(8)<a class="headerlink" href="#equation-chapters-lad-5" title="Permalink to this equation">¶</a></span>\[S(\theta, \theta_{L}) = \cos\theta \cos \theta_{L} \left[ 1 + \frac{2}{\pi}(\tan x - x) \right], \hspace{.5cm} \textrm{for } \theta \gt \pi/2 - \theta_{L}\]</div>
+<div class="math notranslate nohighlight" id="equation-chapters-lad-6">
+<span class="eqno">(9)<a class="headerlink" href="#equation-chapters-lad-6" title="Permalink to this equation">¶</a></span>\[x = \cos^{-1}\left( \cot \theta \cot \theta_{L} \right).\]</div>
+<p>Here <span class="math notranslate nohighlight">\(q\)</span> is the leaf-inclination-angle class and Tq is the total number of leaf-inclination-angle classes. Thus, if there are <span class="math notranslate nohighlight">\(18\)</span> leaf-inclination-angle classes from <span class="math notranslate nohighlight">\(0◦\)</span> to <span class="math notranslate nohighlight">\(90◦\)</span> (<span class="math notranslate nohighlight">\(Tq = 18\)</span>), then each class consists of a <span class="math notranslate nohighlight">\(5◦\)</span> interval. For example, <span class="math notranslate nohighlight">\(q = 1\)</span>, <span class="math notranslate nohighlight">\(q = 9\)</span>, and <span class="math notranslate nohighlight">\(q = 16\)</span> include the angles from <span class="math notranslate nohighlight">\(0◦\)</span> to <span class="math notranslate nohighlight">\(4◦\)</span>, <span class="math notranslate nohighlight">\(40◦\)</span> to <span class="math notranslate nohighlight">\(44◦\)</span>, and <span class="math notranslate nohighlight">\(75◦\)</span> to <span class="math notranslate nohighlight">\(79◦\)</span>, respectively. <span class="math notranslate nohighlight">\(g(q)\)</span> is the distribution of the leaf-inclination-angle class <span class="math notranslate nohighlight">\(q\)</span>, which is a ratio of the leaf area belonging to class <span class="math notranslate nohighlight">\(q\)</span> to total leaf area; <span class="math notranslate nohighlight">\(θ_{L}(q)\)</span> is the midpoint angle of class <span class="math notranslate nohighlight">\(q\)</span>, which is the leaf-inclination angle used to represent class <span class="math notranslate nohighlight">\(q\)</span>.</p>
+<p>This process is done trhough function <code class="docutils literal notranslate"><span class="pre">lad.Gtheta()</span></code>. In function <code class="docutils literal notranslate"><span class="pre">lad.alpha_k()</span></code> we compute <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> for the median of <span class="math notranslate nohighlight">\(\theta\)</span>, the Beam Inclination Angles (BIA) with respect to zenith, in the Kth layer. We made use of the files <code class="docutils literal notranslate"><span class="pre">angles_&lt;treename&gt;.npy</span></code> and <code class="docutils literal notranslate"><span class="pre">weights_&lt;treename&gt;.npy</span></code> we store previously in the directory <code class="docutils literal notranslate"><span class="pre">lia</span></code> to get <span class="math notranslate nohighlight">\(g(q)\)</span>. The function <code class="docutils literal notranslate"><span class="pre">lad.alpha_k()</span></code> create three figures inside the <code class="docutils literal notranslate"><span class="pre">figures</span></code> directory:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">alphas_&lt;treename&gt;_&lt;voxel_size&gt;.png</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bia_&lt;treename&gt;_&lt;voxel_size&gt;.png</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bia_per_k_&lt;treename&gt;_&lt;voxel_size&gt;.png</span></code></p></li>
+</ul>
+<p>Examples of this three figures can be found in Figures <a class="reference internal" href="#alphasplot"><span class="std std-numref">Fig. 11</span></a>, <a class="reference internal" href="#biaplot"><span class="std std-numref">Fig. 12</span></a>, and <a class="reference internal" href="#biakplot"><span class="std std-numref">Fig. 13</span></a> for a <code class="docutils literal notranslate"><span class="pre">downsample</span></code> of <span class="math notranslate nohighlight">\(5 \%\)</span>.</p>
+<div class="figure align-default" id="alphasplot">
+<a class="reference internal image-reference" href="../_images/alphas_tree_0_0.2.png"><img alt="../_images/alphas_tree_0_0.2.png" src="../_images/alphas_tree_0_0.2.png" style="width: 40em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 11 </span><span class="caption-text"><span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> for <span class="math notranslate nohighlight">\(0 &lt; \theta &lt; 90\)</span>. The black-dashed line is <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> with <span class="math notranslate nohighlight">\(G(\theta)\)</span> using all the weighted LIAs, while the coloured-solid lines are with <span class="math notranslate nohighlight">\(G(\theta)\)</span> using the weighted LIAs only in the Kth layer. The yellow shadow shows the BIAs range, and the vertical red-dashed line shows the “magic” angle at <span class="math notranslate nohighlight">\(\theta = 57.5\)</span> where <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> is close to a constant value of <span class="math notranslate nohighlight">\(1.1\)</span>.</span><a class="headerlink" href="#alphasplot" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="biaplot">
+<a class="reference internal image-reference" href="../_images/bia_tree_0_0.2.png"><img alt="../_images/bia_tree_0_0.2.png" src="../_images/bia_tree_0_0.2.png" style="width: 40em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 12 </span><span class="caption-text">The BIAs distribution pre and after angle range correction in Eq.<a class="reference internal" href="angles.html#equation-angcorr">(1)</a>.</span><a class="headerlink" href="#biaplot" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="biakplot">
+<a class="reference internal image-reference" href="../_images/bia_per_k_tree_0_0.2.png"><img alt="../_images/bia_per_k_tree_0_0.2.png" src="../_images/bia_per_k_tree_0_0.2.png" style="width: 40em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 13 </span><span class="caption-text">The BIAs distribution in the Kth layer.</span><a class="headerlink" href="#biakplot" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="estimate-lad">
+<h2>Estimate LAD<a class="headerlink" href="#estimate-lad" title="Permalink to this headline">¶</a></h2>
+<p>Now that we have <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> in the Kth layer (i.e. <span class="math notranslate nohighlight">\(\alpha(\theta, k)\)</span>), we can compute the LAI and therefore the LAD. We do this in function <code class="docutils literal notranslate"><span class="pre">lad.get_LADS()</span></code> which requires 4 input parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">m3att</span></code>: The numpy 3D-array attributes we derive in section <a class="reference internal" href="#sec-ni"><span class="std std-ref">Computing n_{I}(k)</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">voxel_size</span></code>: Voxel Size.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kbins</span></code>: <span class="math notranslate nohighlight">\(\Delta H\)</span> in lengths if K.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alphas_k</span></code>: <code class="docutils literal notranslate"><span class="pre">lad.alpha_k()</span></code> function output.</p></li>
+</ul>
+<p>This returns a numpy 2D-array with the height and LAD for the corresponding height with zero being the bottom of the PR.</p>
+<p>Finally, with function <code class="docutils literal notranslate"><span class="pre">figures.plot_lads()</span></code> we plot LAD as a function of height for:</p>
+<ol class="simple">
+<li><p>Using correction of <span class="math notranslate nohighlight">\(\alpha(\theta, K)\)</span> taking the median of <span class="math notranslate nohighlight">\(\theta\)</span> in the Kth layer.</p></li>
+<li><p>Without <span class="math notranslate nohighlight">\(\alpha(\theta, K)\)</span> correction</p></li>
+<li><p>Truth LAD from mesh file.</p></li>
+</ol>
+<p>The piece of code below we show all the above mentioned steps plus other minor steps. The output figure is saved in directory <code class="docutils literal notranslate"><span class="pre">figures</span></code> with name <code class="docutils literal notranslate"><span class="pre">LAD_&lt;treename&gt;_&lt;voxel_size&gt;.png</span></code> and shown in Fig. <a class="reference internal" href="#ladplot"><span class="std std-numref">Fig. 14</span></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">inds_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;inds.npy&#39;</span><span class="p">)</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">inds_file</span><span class="p">)</span>
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">mockname</span><span class="p">,</span> <span class="s1">&#39;lad_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">downsample</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;downsample:&#39;</span><span class="p">,</span> <span class="n">downsample</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">mockname</span><span class="p">,</span> <span class="s1">&#39;lad&#39;</span><span class="p">)</span>
+
+<span class="n">isfigures</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;figures&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">isfigures</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">isfigures</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;voxel_size:&#39;</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trees</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+    <span class="n">inPR</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+    <span class="n">pointsPR</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inPR</span><span class="p">]</span>
+    <span class="n">sensorsPR</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">inPR</span><span class="p">]</span>
+
+    <span class="n">m3att</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">compute_attributes</span><span class="p">(</span><span class="n">pointsPR</span><span class="p">,</span> <span class="n">resdir</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="c1"># get in down sample boolean array for LPC size</span>
+    <span class="n">inds_</span> <span class="o">=</span> <span class="n">inds</span><span class="p">[(</span><span class="n">val</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)]</span>
+    <span class="n">lias</span><span class="p">,</span> <span class="n">ws</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">downsample_lia</span><span class="p">(</span><span class="n">mockname</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">inds_</span><span class="p">)</span>
+    <span class="n">voxk</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_voxk</span><span class="p">(</span><span class="n">pointsPR</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">)</span>
+    <span class="n">bia</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_bia</span><span class="p">(</span><span class="n">pointsPR</span><span class="p">,</span> <span class="n">sensorsPR</span><span class="p">)</span>
+    <span class="n">meshfile</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_meshfile</span><span class="p">(</span><span class="n">mockname</span><span class="p">)</span>
+
+    <span class="n">figext</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">))</span>
+    <span class="n">alphas_k</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">alpha_k</span><span class="p">(</span><span class="n">bia</span><span class="p">,</span> <span class="n">voxk</span><span class="p">,</span> <span class="n">lias</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">resdir</span><span class="p">,</span> <span class="n">meshfile</span><span class="p">,</span> <span class="n">figext</span><span class="o">=</span><span class="n">figext</span><span class="p">,</span> 
+                            <span class="n">klia</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_true_lia</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">kmax</span> <span class="o">=</span> <span class="n">m3att</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">kbins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kmax</span><span class="o">/</span><span class="mi">15</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">kbins</span><span class="p">)</span>
+   
+    <span class="n">lads_mid</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_LADS</span><span class="p">(</span><span class="n">m3att</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">kbins</span><span class="p">,</span> <span class="n">alphas_k</span><span class="p">[:,</span><span class="mi">6</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">lads_0</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_LADS</span><span class="p">(</span><span class="n">m3att</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">kbins</span><span class="p">,</span> <span class="n">alphas_k</span><span class="p">[:,</span><span class="mi">6</span><span class="p">]</span><span class="o">*</span><span class="mi">0</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">lads_mesh</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_LADS_mesh</span><span class="p">(</span><span class="n">meshfile</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">kbins</span><span class="p">,</span> <span class="n">kmax</span><span class="p">)</span>
+
+    <span class="n">lads</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Truth&#39;</span><span class="p">:</span><span class="n">lads_mesh</span><span class="p">,</span> <span class="s1">&#39;Correction Mean&#39;</span><span class="p">:</span><span class="n">lads_mid</span><span class="p">,</span> <span class="s1">&#39;No Correction&#39;</span><span class="p">:</span><span class="n">lads_0</span><span class="p">}</span>
+
+    <span class="n">savefig</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;figures&#39;</span><span class="p">,</span><span class="s1">&#39;LAD_</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">figext</span><span class="p">))</span>
+    <span class="n">figures</span><span class="o">.</span><span class="n">plot_lads</span><span class="p">(</span><span class="n">lads</span><span class="p">,</span> <span class="n">savefig</span><span class="o">=</span><span class="n">savefig</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="ladplot">
+<a class="reference internal image-reference" href="../_images/LAD_tree_0_0.2.png"><img alt="../_images/LAD_tree_0_0.2.png" src="../_images/LAD_tree_0_0.2.png" style="width: 25em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 14 </span><span class="caption-text">LAD as a function of height for (1) solid-red, (2) solid-blue, and (3) solid-black.</span><a class="headerlink" href="#ladplot" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="final-structure">
+<h2>final structure<a class="headerlink" href="#final-structure" title="Permalink to this headline">¶</a></h2>
+<p>In this chapter we create several files that are listed below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>root
+└───data
+    └───test
+        │   s0100000.numpy
+        │   s0200000.numpy
+        │   ...
+        │   mesh.ply
+        │   scanner_pos.txt
+        │   s0100000.npy
+        │   s0200000.npy
+        │   ...
+        └───lad_&lt;downsample&gt;
+        │   │   inds.npy
+        │   │   m3s_&lt;treename&gt;_&lt;voxel_size&gt;.npy
+        │   │   m3count_&lt;treename&gt;_&lt;voxel_size&gt;.npy
+        │   └───figures
+        │       │   alphas_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        │       │   bia_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        │       │   bia_per_k_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        │       │   LAD_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        └───lia
+            │   angles_&lt;treename&gt;.npy
+            │   weights_&lt;treename&gt;.npy
+            │   leaf_angle_dist_&lt;treename&gt;.png
+            │   leaf_angle_dist_height_&lt;treename&gt;.png
+            │   bestfits_pars_treename&gt;.png
+</pre></div>
+</div>
+</div>
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./chapters"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+        
+            
+
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="angles.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title"><code class="docutils literal notranslate"><span class="pre">Leaf</span> <span class="pre">Inclination</span> <span class="pre">Angle</span></code> (LIA) estimation</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="kiwi.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">The Data structure of LiDAR</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
+        
+        </div>
+    </div>
+    <footer class="footer">
+    <div class="container">
+      <p>
+        
+          By Dr. Omar Ruiz-Macias Dr. Alvaro Orsi<br/>
+        
+            &copy; Copyright 2021.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>
