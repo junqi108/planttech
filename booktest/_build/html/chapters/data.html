@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data structure &#8212; Towards kiwifruit canopy reconstruction with LiDAR technology</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["\\(", "\\)"]], "displayMath": [["\\[", "\\]"]], "processRefs": false, "processEnvironments": false}})</script>
+    <script async="async" src="https://unpkg.com/thebe@0.5.1/lib/index.js"></script>
+    <script >
+        const thebe_selector = ".thebe"
+        const thebe_selector_input = "pre"
+        const thebe_selector_output = ".output"
+    </script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Leaf Inclination Angle (LIA) estimation" href="angles.html" />
+    <link rel="prev" title="Toy tree and sensor specifications" href="mocktree.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Towards kiwifruit canopy reconstruction with LiDAR technology</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="outline.html">
+   Outline
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  LiDAR simulation on mockup trees with BLENSOR
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="mocktree.html">
+   Toy tree and sensor specifications
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Data structure
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="angles.html">
+   Leaf Inclination Angle (LIA) estimation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="lad.html">
+   Leaf Area Density (LAD) estimation
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/chapters/data.md"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.md</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/executablebooks/jupyter-book"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        <a class="issues-button"
+            href="https://github.com/executablebooks/jupyter-book/issues/new?title=Issue%20on%20page%20%2Fchapters/data.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#blensor-output-transformation">
+   Blensor output transformation
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#tree-and-leaves-segmentation">
+   Tree and leaves segmentation
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="data-structure">
+<h1>Data structure<a class="headerlink" href="#data-structure" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>root
+│   requirements.yml
+│   readme.md  
+│
+└───data
+│   └───test
+│       │   s0100000.numpy
+│       │   s0200000.numpy
+│       │   ...
+│       │   mesh.ply
+│       │   scanner_pos.txt
+│   
+└───py
+    │   loads.py
+    │   lia.py
+    │   lad.py
+    │   ray.py
+    │   figures.py
+
+</pre></div>
+</div>
+<div class="section" id="blensor-output-transformation">
+<h2>Blensor output transformation<a class="headerlink" href="#blensor-output-transformation" title="Permalink to this headline">¶</a></h2>
+<p>Most of the functions used in this chapter need:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">loads</span>
+</pre></div>
+</div>
+<p>In order to get the <code class="docutils literal notranslate"><span class="pre">LIA</span></code> and hence the <code class="docutils literal notranslate"><span class="pre">LAD</span></code>, we need to segmentated the trees and the leaves.</p>
+<p>First, we define the name of the directory where the Blensor output data is, in this particular case we will look for directory <code class="docutils literal notranslate"><span class="pre">test</span></code>. Pipeline will look for this directory inside the <code class="docutils literal notranslate"><span class="pre">data</span></code> directory.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">mockname</span> <span class="o">=</span> <span class="s1">&#39;test&#39;</span>
+</pre></div>
+</div>
+<p>Next, we convert Blensor output <code class="docutils literal notranslate"><span class="pre">txt</span></code> files that have fake <code class="docutils literal notranslate"><span class="pre">numpy</span></code> extension to real <code class="docutils literal notranslate"><span class="pre">npy</span></code>. This is done trhough function <code class="docutils literal notranslate"><span class="pre">loads.numpy2npy()</span></code> as shown below,</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">loads</span><span class="o">.</span><span class="n">numpy2npy</span><span class="p">(</span><span class="n">mockname</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Transforming to <code class="docutils literal notranslate"><span class="pre">npy</span></code> reduce the size of files, besides is much faster to load than the Blensor <code class="docutils literal notranslate"><span class="pre">txt</span></code> output files.</p>
+</div>
+<p>The structure looks like,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>root
+|
+└───data
+    └───test
+        │   s0100000.numpy
+        │   s0200000.numpy
+        │   ...
+        │   mesh.ply
+        │   scanner_pos.txt
+        │   s0100000.npy
+        │   s0200000.npy
+        │   ...
+</pre></div>
+</div>
+</div>
+<div class="section" id="tree-and-leaves-segmentation">
+<h2>Tree and leaves segmentation<a class="headerlink" href="#tree-and-leaves-segmentation" title="Permalink to this headline">¶</a></h2>
+<p>Now we create the module to segmentate trees. This will be tuned acordingly for each data set, so below module only works for this particular data set.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">segtree</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">leaves</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">trees</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+    <span class="c1"># centres</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">y</span><span class="p">:</span>
+            
+            <span class="n">keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">keep</span> <span class="o">&amp;=</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">i</span><span class="o">+</span><span class="n">dx</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">i</span><span class="o">-</span><span class="n">dx</span><span class="p">)</span>
+            <span class="n">keep</span> <span class="o">&amp;=</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">j</span><span class="o">+</span><span class="n">dy</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">j</span><span class="o">-</span><span class="n">dy</span><span class="p">)</span>
+
+            <span class="n">trees</span><span class="p">[</span><span class="s1">&#39;tree_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">))]</span> <span class="o">=</span> <span class="n">keep</span>
+            
+            <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="n">leaves</span> <span class="o">&amp;</span> <span class="n">keep</span><span class="p">],</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="n">leaves</span> <span class="o">&amp;</span> <span class="n">keep</span><span class="p">],</span> <span class="n">s</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">num</span><span class="p">)</span>
+                        
+            <span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">trees</span>
+</pre></div>
+</div>
+<p>We segmentate the trees below,</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load data into a pandas data frame</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">loads</span><span class="o">.</span><span class="n">npy2pandas</span><span class="p">(</span><span class="n">mockname</span><span class="p">)</span>
+<span class="c1"># extract leaves. Boolean array output</span>
+<span class="n">leaves</span> <span class="o">=</span> <span class="n">loads</span><span class="o">.</span><span class="n">extract_leaves</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># extract trees. Dictionary with boolean arrays output</span>
+<span class="n">trees</span> <span class="o">=</span> <span class="n">segtree</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">leaves</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>That’s it! So what we just did? First, with function <code class="docutils literal notranslate"><span class="pre">loads.npy2pandas()</span></code> we load all the <code class="docutils literal notranslate"><span class="pre">npy</span></code> files into a pandas DataFrame (<code class="docutils literal notranslate"><span class="pre">DF</span></code>) and we add three more columns with the <span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(y\)</span>, and <span class="math notranslate nohighlight">\(z\)</span> positions of the sensors that are stored in file <code class="docutils literal notranslate"><span class="pre">scanner_pos.txt</span></code>. Then, since this is a mockup dataset, we can easily separate the leaves from everythin else in the point cloud (<code class="docutils literal notranslate"><span class="pre">PC</span></code>). We do this with function <code class="docutils literal notranslate"><span class="pre">loads.extract_leaves()</span></code> that requires the pandas <code class="docutils literal notranslate"><span class="pre">DF</span></code> as input. Finally, we invoke the above module to segmentate trees that requires the pandas <code class="docutils literal notranslate"><span class="pre">DF</span></code> as well.</p>
+<p>outputs from this are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">df</span></code>: Pandas DF with the entire PC</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">leaves</span></code>: numpy boolean array of PC dimensions with True for Points concerning leaves only</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trees</span></code>: python dictionary where each entry contains one tree in the form of boolena array with PC dimensions</p></li>
+</ul>
+<p>Below piece of code shows an example of how to visualize the leaves points from one tree only, this will be know as the <code class="docutils literal notranslate"><span class="pre">Leaves</span> <span class="pre">Point</span> <span class="pre">Cloud</span></code> (LPC) and is shown in Fig. <a class="reference internal" href="#lpc"><span class="std std-numref">Fig. 3</span></a>.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># show the point cloud from leaves of firs tree only</span>
+<span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="n">trees</span><span class="p">[</span><span class="s1">&#39;tree_0&#39;</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)</span>
+<span class="n">loads</span><span class="o">.</span><span class="n">showPCfromDF</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">keep</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="lpc">
+<a class="reference internal image-reference" href="../_images/lpc.gif"><img alt="../_images/lpc.gif" src="../_images/lpc.gif" style="width: 30em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 3 </span><span class="caption-text">Leaf Point Cloud.</span><a class="headerlink" href="#lpc" title="Permalink to this image">¶</a></p>
+</div>
+<p>In the subsequent chapters we will be comparing our estimations with the <em>True</em> values using the <code class="docutils literal notranslate"><span class="pre">mesh.ply</span></code> file located in the root directory <code class="docutils literal notranslate"><span class="pre">test</span></code>. The following piece of code shows how we can visualize this mesh that requires importing the library <code class="docutils literal notranslate"><span class="pre">lad</span></code>. Fig. <a class="reference internal" href="#mesh"><span class="std std-numref">Fig. 4</span></a> show this mesh.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">lad</span>
+<span class="n">meshfile</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_meshfile</span><span class="p">(</span><span class="n">mockname</span><span class="p">)</span>
+<span class="n">lad</span><span class="o">.</span><span class="n">see_mesh</span><span class="p">(</span><span class="n">meshfile</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="mesh">
+<a class="reference internal image-reference" href="../_images/mesh.gif"><img alt="../_images/mesh.gif" src="../_images/mesh.gif" style="width: 30em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 4 </span><span class="caption-text">Mesh from Toy tree.</span><a class="headerlink" href="#mesh" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./chapters"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+        
+            
+
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="mocktree.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">Toy tree and sensor specifications</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="angles.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title"><code class="docutils literal notranslate"><span class="pre">Leaf</span> <span class="pre">Inclination</span> <span class="pre">Angle</span></code> (LIA) estimation</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
+        
+        </div>
+    </div>
+    <footer class="footer">
+    <div class="container">
+      <p>
+        
+          By Dr. Omar Ruiz-Macias Dr. Alvaro Orsi<br/>
+        
+            &copy; Copyright 2021.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

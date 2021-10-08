@@ -13,7 +13,7 @@ data/
 .~lock.*
 **.blend1
 **.mtl
-**_build/
+# **_build/
 
 # User-specific files
 *.rsuser
