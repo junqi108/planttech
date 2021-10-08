@@ -1,0 +1,22 @@
+{
+    "pipeline":[
+         "../data/real/kiwi.laz",
+         {
+            "type":"filters.sample",
+            "radius": 0.04
+         },
+         {
+          "type":"filters.range",
+          "limits":"Z[:2.5]"
+         },
+         {
+            "type":"filters.crop",
+            "polygon":"POLYGON((-1.35 -1.61, -3.45 7.45, -41.9 -9.86, -39.8 -18.91, -1.35 -1.61))"
+         },
+         {
+          "type" : "writers.las",
+          "forward": "all",
+          "filename" : "../pdal/kiwi_crop.las"
+         }   
+    ]
+}

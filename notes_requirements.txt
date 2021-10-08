@@ -1,0 +1,9 @@
+When creating the list of requirements use:
+
+conda env export -n <env-name> --no-builds> requirements.yml
+
+and to create the environment use:
+
+conda env create -f path/to/environment.yml
+
+If getting the issue 'ResolvePackageNotFound' just move these packages under 'pip'.

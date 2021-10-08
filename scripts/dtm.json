@@ -1,0 +1,44 @@
+{
+    "pipeline":[
+         "kiwi_crop.las",
+        {
+            "type":"filters.reprojection",
+            "in_srs":"EPSG:2193",
+            "out_srs":"EPSG:2193"
+        },
+        {
+          "type":"filters.assign",
+          "assignment":"Classification[:]=0"
+        },
+        {
+          "type":"filters.elm"
+        },
+        {
+          "type":"filters.outlier"
+        },
+        {
+          "type":"filters.range",
+          "limits": "returnnumber[1:],NumberOfReturns[1:]"
+        },
+        {
+
+          "type":"filters.smrf",
+          "ignore":"Classification[7:7]",
+          "slope":0.2,
+          "window":16,
+          "threshold":0.45,
+          "scalar":1.2
+        },
+        {
+          "filename":"dtm.tif",
+          "gdaldriver":"GTiff",
+          "resolution": 0.04,
+          "type": "writers.gdal",
+          "bounds": "([-41.9, -1.35],[-18.91, 7.45])"
+        },
+        {
+          "type":"filters.range",
+          "limits":"Classification[2:2]"
+        }
+    ]
+}

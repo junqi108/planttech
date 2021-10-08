@@ -1,0 +1,14 @@
+{
+    "pipeline":[
+         "../data/real/kiwi.laz",
+         {
+            "type":"filters.sample",
+            "radius": 0.04
+         },
+         {
+          "type" : "writers.las",
+          "forward": "all",
+          "filename" : "../pdal/kiwi.las"
+         }   
+    ]
+}
