@@ -18,5 +18,5 @@ parts:
 
   - caption: Aplication on real Kiwkifruit LiDAR dataset
     chapters:
-    - file: chapters/kiwi_segmentation
-      title: Tree and leave segmentation
+    - file: chapters/kiwi
+      title: The Data structure of LiDAR
