@@ -29,3 +29,9 @@ conda env create -f path/to/environment.yml
 ```
 
 If getting the issue `ResolvePackageNotFound` just move these packages under 'pip'.
+
+Install `laspy` with
+
+```
+conda install -c conda-forge laspy
+```

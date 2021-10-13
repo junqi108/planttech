@@ -27,7 +27,7 @@ plt.rc('lines', linewidth=2)
 plt.rc('legend', fontsize=12)    # legend fontsize
 
 
-def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None):
+def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None, ylim=None):
 
     fig = plt.figure(figsize=(8,5))
 
@@ -61,7 +61,10 @@ def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None):
 
     plt.ylabel(r'Frecuency')
     plt.xlabel(r'$\theta_{L}$')
-    plt.ylim(0, maxh+maxh/3)
+    if ylim is not None:
+        plt.ylim(0, ylim)
+    else:
+        plt.ylim(0, maxh+maxh/3)
 
     # 
     plt.ioff()
@@ -76,14 +79,22 @@ def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None):
 
 
 
-def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None):
+def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None, ylim=None):
 
-    fig = plt.figure(figsize=(8,5*2))
+    if true_angles is not None:
+        fig = plt.figure(figsize=(8,5*2))
+    else:
+        fig = plt.figure(figsize=(8,5*1))
+
     angs = np.array(angs)
-    true_angles = np.array(true_angles)
+    if true_angles is not None:
+        true_angles = np.array(true_angles)
 
     bins = np.linspace(0, 90, int(90/5))
-    bins_k = list(set(voxk_mesh))
+    if voxk_mesh is not None:
+        bins_k = list(set(voxk_mesh))
+    else:
+        bins_k = list(set(voxk))
     bins_ = np.linspace(0, len(bins_k), len(bins_k)+1)
 
     if ws is None:
@@ -94,35 +105,40 @@ def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None):
     plt.subplot(2, 1, 1)
     plt.title('Height Normalized')
     plt.hist(voxk, bins=bins_, weights=weights, align='left', histtype='step', lw=3, color='g', density=True, label='Estimated')
-    plt.hist(voxk_mesh, bins=bins_, align='left', histtype='step', lw=2,  ls='--', color='r', density=True, label='Truth')
+    if voxk_mesh is not None:
+        plt.hist(voxk_mesh, bins=bins_, align='left', histtype='step', lw=2,  ls='--', color='r', density=True, label='Truth')
     plt.legend()
     plt.ylabel(r'Frecuency')
     plt.xlabel(r'Height (voxel K)')
+    if ylim is not None:
+        plt.ylim(0, ylim)
 
-    plt.subplot(2, 1, 2)
+    if true_angles is not None:
 
-    plt.axhline(0, ls='--', lw=2, color='k')
+        plt.subplot(2, 1, 2)
 
-    for k in bins_k:
+        plt.axhline(0, ls='--', lw=2, color='k')
 
-        keep = voxk == k
-        keep_mesh = voxk_mesh == k
-        if weights is None:
-            hist, x = np.histogram(angs[keep], bins=bins, density=True)
-        else:
-            hist, x = np.histogram(angs[keep], bins=bins, weights=weights[keep], density=True)
-        hist_mesh, _ = np.histogram(true_angles[keep_mesh], bins=bins, density=True)
-        delta = hist_mesh - hist
+        for k in bins_k:
 
-        x = (x[:-1]+x[1:])/2
-        plt.plot(x, delta, lw=1.5, label=k)
+            keep = voxk == k
+            keep_mesh = voxk_mesh == k
+            if weights is None:
+                hist, x = np.histogram(angs[keep], bins=bins, density=True)
+            else:
+                hist, x = np.histogram(angs[keep], bins=bins, weights=weights[keep], density=True)
+            hist_mesh, _ = np.histogram(true_angles[keep_mesh], bins=bins, density=True)
+            delta = hist_mesh - hist
 
-    plt.ylabel(r'Frecuency')
-    plt.xlabel(r'$\theta_{L}$')
-    plt.legend(fontsize=8)
+            x = (x[:-1]+x[1:])/2
+            plt.plot(x, delta, lw=1.5, label=k)
 
-    # 
-    plt.ioff()
+        plt.ylabel(r'Frecuency')
+        plt.xlabel(r'$\theta_{L}$')
+        plt.legend(fontsize=8)
+
+        # 
+        plt.ioff()
 
     if savefig is not None:
         plt.savefig(savefig, dpi=200, bbox_inches='tight')

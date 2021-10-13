@@ -18,5 +18,5 @@ parts:
 
   - caption: Aplication on real Kiwkifruit LiDAR dataset
     chapters:
-    - file: chapters/kiwi
-      title: The Data structure of LiDAR
+    - file: chapters/kiwifruit_data
+      title: Kiwifruit MLS LiDAR data structure

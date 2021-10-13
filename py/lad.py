@@ -252,9 +252,11 @@ def Gtheta(theta, thetaLq, gq):
 
     return np.array(Gtheta_i).sum()
 
-def alpha_k(bia, voxk, lias, ws, resdir, meshfile, figext=None, klia=False, use_true_lia=False):
+def alpha_k(bia, voxk, lias, ws, resdir, meshfile=None, figext=None, klia=False, use_true_lia=False):
 
-    colors = plt.cm.jet(np.linspace(0,1,len(set(voxk))))
+    # colors = plt.cm.jet(np.linspace(0,1,len(set(voxk))))
+    colors = plt.cm.jet(np.linspace(0,1,np.array(voxk).max() + 1))
+
     # uv = beam_direction(beam_angles.T[0], beam_angles.T[1], scan_inc)
     
     # bins = np.linspace(0, 90, int(90/1)) # Don't change this!!!
@@ -319,44 +321,52 @@ def alpha_k(bia, voxk, lias, ws, resdir, meshfile, figext=None, klia=False, use_
     if figext is not None:
         fig = plt.figure(figsize=(14, 6))
 
-    for k in list(set(voxk)):
+    for k in range(np.array(voxk).max() + 1):
+    # for k in list(set(voxk)):
 
-        keep = voxk == k
-        angi = bia[keep]
-        median = np.median(angi)
+        keep = np.array(voxk) == k
 
-        h_, x_ = np.histogram(lias[keep], bins=bins, weights=weights[keep], density=True)
-        thetaLq_ = (x_[:-1]+x_[1:])/2
-        alpha_ = [np.cos(np.radians(i))/Gtheta(i, thetaLq_, h_) for i in range(90)]
-        # print('k, height density: ', h_)
+        if np.sum(keep) == 0:
 
-        if figext is not None:
-            plt.subplot(1,1,1)
-            if k == 0 or k == list(set(voxk))[-1]:
-                label = 'k=%i' %(k)
-            else:
-                label = None
-            plt.plot(np.arange(0, 90, 1), alpha_, lw=0.5, color=colors[k], label=label)
-            if k == list(set(voxk))[-1]: 
-                plt.plot(bins, alpha, lw=3, ls='--', color='k', label='all')
-                plt.axvline(57.5, ls='--', lw=3, color='r', label=r'$\theta_{0}=57.5$')
-                # plt.axvline(scan_inc if scan_inc <= 90 else 180-scan_inc, ls='--', lw=3, color='orange', label=r'$\theta_{S}=%i$' %(scan_inc if scan_inc <= 90 else 180-scan_inc))
-                plt.fill_between(ba, [alpha_f(i) for i in ba], color='yellow', alpha=0.5)
-            plt.legend()
-        
-        if klia:
-            T, H = thetaLq_, h_
+            res.append([k, 0, 0, 0, 0, 0, 0, 0])
+
         else:
-            T, H = thetaLq, h
 
-        alpha_min = np.cos(np.radians(angi.min()))/Gtheta(angi.min(), T, H)
-        alpha_max = np.cos(np.radians(angi.max()))/Gtheta(angi.max(), T, H)
-        alpha_median = np.cos(np.radians(median))/Gtheta(median, T, H)
+            angi = bia[keep]
+            median = np.median(angi)
 
-        # add mean weights per k
-        mean_weights_k = np.mean(weights[keep])
-        res.append([k, angi.min(), alpha_min, angi.max(), alpha_max, median, alpha_median, mean_weights_k])
-        # print('k, median, alpha_median', k, median, alpha_median)
+            h_, x_ = np.histogram(lias[keep], bins=bins, weights=weights[keep], density=True)
+            thetaLq_ = (x_[:-1]+x_[1:])/2
+            alpha_ = [np.cos(np.radians(i))/Gtheta(i, thetaLq_, h_) for i in range(90)]
+            # print('k, height density: ', h_)
+
+            if figext is not None:
+                plt.subplot(1,1,1)
+                if k == 0 or k == list(set(voxk))[-1]:
+                    label = 'k=%i' %(k)
+                else:
+                    label = None
+                plt.plot(np.arange(0, 90, 1), alpha_, lw=0.5, color=colors[k], label=label)
+                if k == list(set(voxk))[-1]: 
+                    plt.plot(bins, alpha, lw=3, ls='--', color='k', label='all')
+                    plt.axvline(57.5, ls='--', lw=3, color='r', label=r'$\theta_{0}=57.5$')
+                    # plt.axvline(scan_inc if scan_inc <= 90 else 180-scan_inc, ls='--', lw=3, color='orange', label=r'$\theta_{S}=%i$' %(scan_inc if scan_inc <= 90 else 180-scan_inc))
+                    plt.fill_between(ba, [alpha_f(i) for i in ba], color='yellow', alpha=0.5)
+                plt.legend()
+            
+            if klia:
+                T, H = thetaLq_, h_
+            else:
+                T, H = thetaLq, h
+
+            alpha_min = np.cos(np.radians(angi.min()))/Gtheta(angi.min(), T, H)
+            alpha_max = np.cos(np.radians(angi.max()))/Gtheta(angi.max(), T, H)
+            alpha_median = np.cos(np.radians(median))/Gtheta(median, T, H)
+
+            # add mean weights per k
+            mean_weights_k = np.mean(weights[keep])
+            res.append([k, angi.min(), alpha_min, angi.max(), alpha_max, median, alpha_median, mean_weights_k])
+            # print('k, median, alpha_median', k, median, alpha_median)
 
     if figext is not None:
         plt.xlabel(r'$\theta$')

@@ -4,8 +4,12 @@ import matplotlib.pyplot as plt
 import open3d as o3d
 import os, sys, glob
 import laspy as lp
+from dbfread import DBF
 from scipy.stats import chisquare
 from time import process_time
+from scipy import interpolate
+import pyrr 
+from mpl_toolkits.mplot3d import Axes3D
 
 __author__ = 'Omar A. Ruiz Macias'
 __copyright__ = 'Copyright 2021, PLANTTECH'
@@ -139,4 +143,95 @@ def extract_leaves(df, show=False):
         showPCfromDF(df[leaves])
 
     return leaves
+
+
+def loadlaz(name):
+
+    filepath = os.path.join(_data, name, 'lidar.laz')
+    las = lp.read(filepath)
+
+    return las
+
+def loaddbf(name):
+
+    filepath = os.path.join(_data, name, 'trajectory.dbf')
+    table = DBF(filepath, load=True)
+
+    return table
+
+def showPCDS(pointslist, colours):
+
+    pcds = []
+
+    for num, points in enumerate(pointslist):
+
+        pcd = points2pcd(points)
+        color = np.full_like(points, colours[num])
+        pcd.colors = o3d.utility.Vector3dVector(color)
+
+        pcds.append(pcd)
+
+    o3d.visualization.draw_geometries(pcds)
+
+def interp_traj(traj, gpstime):
+
+    tck, u = interpolate.splprep([np.array(traj.x), np.array(traj.y), np.array(traj.z)], s=2)
+    limits = traj['gpstime'].min(), traj['gpstime'].max()
+    gpstimenorm = normgpstime(gpstime, limits)
+    xs, ys, zs = interpolate.splev(gpstimenorm, tck)
+
+    return xs, ys, zs
+
+def normgpstime(gpstime, limits):
+    '''
+    Normalize the gpstime to run from zero to one.
+    '''
+
+    dd = limits[1] - limits[0]
+    gpstimenorm = (gpstime - limits[0]) / dd
+
+    return gpstimenorm
+
+def coordsDF(las, traj):
+
+    xs, ys, zs = interp_traj(traj, las.gps_time)
+    df = np.vstack((las.x, las.y, las.z, xs, ys, zs)).transpose()
+    df = pd.DataFrame(df, columns=['x', 'y', 'z', 'xs', 'ys', 'zs'])
+
+    return df
+
+def showbeams(df):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    points = DF2array(df[['x', 'y', 'z']])
+    sensors = DF2array(df[['xs', 'ys', 'zs']])
+
+    for p1, p2 in zip(points, sensors):
+
+        line = pyrr.line.create_from_points(p1, p2, dtype=None)
+        ax.plot(*line.T.tolist(), lw=0.1)
+        ax.scatter3D(*p1, c='g', s=2)
+        ax.scatter3D(*p2, c='r', s=5)
+
+def remove_outliers(a, b):
+
+    bins = np.linspace(a.min(), a.max(), 400)
+    keep = np.zeros(len(a), dtype=bool)
+    res = []
+
+    for i in range(len(bins)-1):
+        
+        mask = (a > bins[i]) & (a < bins[i+1])
+        median = np.median(b[mask])
+        low, upp = np.percentile(b[mask], (1, 99))
+        mask &= (b > low) & (b < upp)
+        res.append([(bins[i+1] + bins[i])/2, median, low, upp])
+
+        plt.scatter(a[mask], b[mask], s=0.01)
+
+        keep |= mask
+
+    return res, keep
 

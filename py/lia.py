@@ -167,20 +167,25 @@ def get_weigths(points, voxel_size=0.5):
     return ws
 
 def leaf_angle(points, mockname, treename, voxel_size_w, kd3_sr, max_nn, save=False,
-savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1):
-
+savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1, ismock=True,
+ylim=None, ylimh=None):
+    
     mockdir = os.path.join(_data, mockname)
     resdir = os.path.join(mockdir, 'lia')
     if not os.path.exists(resdir):
         os.makedirs(resdir)
 
     # Mesh file
-    meshfile = os.path.join(mockdir, 'mesh.ply')
-    if os.path.isfile(meshfile):
-        ta = true_angles(meshfile)
-        voxk_mesh = get_voxk_mesh(meshfile, voxel_size=voxel_size_h)
+    if ismock:
+        meshfile = os.path.join(mockdir, 'mesh.ply')
+        if os.path.isfile(meshfile):
+            ta = true_angles(meshfile)
+            voxk_mesh = get_voxk_mesh(meshfile, voxel_size=voxel_size_h)
+        else:
+            raise ValueError('No mesh.ply file in %s' %(mockdir))
     else:
-        raise ValueError('No mesh.ply file in %s' %(mockdir))
+        ta = None
+        voxk_mesh = None
 
     # Compute the normals to fpc (nfpc)
     if downsample:
@@ -193,7 +198,8 @@ savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1):
     thetaL = angs['avgAngle']
 
     thetaL = correct_angs(angs['avgAngle'])
-    ta = correct_angs(ta)
+    if ismock:
+        ta = correct_angs(ta)
 
     if savefig:
         _savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
@@ -207,9 +213,14 @@ savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1):
     else:
         ws = None
 
-    h, thetaLq, htruth = figures.angs_dist(thetaL, ta, savefig=_savefig, text=text, ws=ws)
+    if ismock:
+        h, thetaLq, htruth = figures.angs_dist(thetaL, ta, savefig=_savefig, text=text, ws=ws)
+    else:
+        h, thetaLq = figures.angs_dist(thetaL, ta, savefig=_savefig, text=text, ws=ws, ylim=ylim)
+
     voxk = get_voxk(points, voxel_size=voxel_size_h)
-    figures.angs_dist_k(voxk, voxk_mesh, thetaL, ta, ws=ws, savefig=_savefig_k)
+
+    figures.angs_dist_k(voxk, voxk_mesh, thetaL, ta, ws=ws, savefig=_savefig_k, ylim=ylimh)
 
     # Save angles and weights
     if save:
@@ -219,14 +230,16 @@ savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1):
             outdir_ws = os.path.join(resdir, 'weights_%s.npy' %(treename))
             np.save(outdir_ws, ws)
 
-    if float(0) in htruth:
-        chi2, p = chisquare(h+1, htruth+1)
-    else:
-        chi2, p = chisquare(h, htruth)
+    if ismock:
 
-    return chi2
+        if float(0) in htruth:
+            chi2, p = chisquare(h+1, htruth+1)
+        else:
+            chi2, p = chisquare(h, htruth)
 
-def bestfit_pars_la(points, mockname, treename, weigths=True):
+        return chi2
+
+def bestfit_pars_la(points, mockname, treename, weigths=True, ismock=True):
     '''
     Find the best fit parameters comparing chi2 of estimated LIA with Truth.
     '''
@@ -250,10 +263,13 @@ def bestfit_pars_la(points, mockname, treename, weigths=True):
     # Mesh file
     meshfile = os.path.join(mockdir, 'mesh.ply')
 
-    if os.path.isfile(meshfile):
-        la = mesh_leaf_area(meshfile)
+    if ismock:
+        if os.path.isfile(meshfile):
+            la = mesh_leaf_area(meshfile)
+        else:
+            raise ValueError('No mesh.ply file in %s' %(mockdir))
     else:
-        raise ValueError('No mesh.ply file in %s' %(mockdir))
+        la = 0.
 
     res = {}
     res['leafsize'] = la
@@ -269,13 +285,13 @@ def bestfit_pars_la(points, mockname, treename, weigths=True):
 
             if key == 'voxel_size_w':
                 chi2 = leaf_angle(points, mockname, treename, 
-                par, kd3_sr, max_nn, weigths=weigths)
+                par, kd3_sr, max_nn, weigths=weigths, ismock=ismock)
             elif key == 'kd3_sr':
                 chi2 = leaf_angle(points, mockname, treename, 
-                voxel_size_w, par, max_nn, weigths=weigths)
+                voxel_size_w, par, max_nn, weigths=weigths, ismock=ismock)
             elif key == 'max_nn':
                 chi2 = leaf_angle(points, mockname, treename, 
-                voxel_size_w, kd3_sr, par, weigths=weigths)
+                voxel_size_w, kd3_sr, par, weigths=weigths, ismock=ismock)
             else:
                 raise ValueError('%s is not a valid parameter' %(key))
 

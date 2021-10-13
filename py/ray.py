@@ -495,9 +495,9 @@ def main(points, sensors, pointsPR, voxel_size, resdir, treename, show=False):
         pc = plotCubeAt2(positions,sizes,colors=[1,0,0,0.2], edgecolor="k")
         ax.add_collection3d(pc)
 
-        ax.set_xlim([-18,18])
-        ax.set_ylim([-18,18])
-        ax.set_zlim([0,20])
+        # ax.set_xlim([-18,18])
+        # ax.set_ylim([-18,18])
+        # ax.set_zlim([0,20])
     else:
         ax = None
 
@@ -511,9 +511,12 @@ def main(points, sensors, pointsPR, voxel_size, resdir, treename, show=False):
 
             boxes = intercept(ray, boxPR, voxel_size)
 
-            idx = np.array(AABB2vgidx(boxes))
-            m3s[idx.T[0], idx.T[1], idx.T[2]] = True
-            m3count[idx.T[0], idx.T[1], idx.T[2]] += 1
+            try:
+                idx = np.array(AABB2vgidx(boxes))
+                m3s[idx.T[0], idx.T[1], idx.T[2]] = True
+                m3count[idx.T[0], idx.T[1], idx.T[2]] += 1
+            except Exception as e:
+                print(e)
 
             if show:
 
