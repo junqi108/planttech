@@ -230,6 +230,7 @@ def plot_lads(lads, savefig=None):
     plt.xlabel(r'LAD ($m^2/m^3$)')
     plt.ylabel(r'Height ($m$)')
     plt.legend()
+    plt.xlim(0, 2.7)
 
     if savefig is not None:
         plt.savefig(savefig, dpi=200, bbox_inches='tight')

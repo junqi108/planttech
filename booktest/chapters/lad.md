@@ -63,7 +63,7 @@ voxel_size = 0.2
 ```
 
 ```{important}
-The `downsample` step is very important as we notice that there's a relation between `downsample` and the `voxel_size` that does not seem to affect the estimation of the LAD. This relationship can be seen in figure {numref}`downsample_samples` where the lower the `downsample` is, the higher the `voxel_size` needs to be.
+The `downsample` step is very important as we notice that there's a relation between `downsample` and the `voxel_size` that does not seem to affect the estimation of the LAD. This relationship can be seen in {numref}`downsample_samples` where the lower the `downsample` is, the higher the `voxel_size` needs to be.
 
 ```{figure} ../figs/lads_downsample_samples.png
 ---
@@ -261,7 +261,7 @@ Finally, with function `figures.plot_lads()` we plot LAD as a function of height
 2. Without $\alpha(\theta, K)$ correction
 3. Truth LAD from mesh file.
 
-The piece of code below we show all the above mentioned steps plus other minor steps. The output figure is saved in directory `figures` with name `LAD_<treename>_<voxel_size>.png` and shown in Fig. {numref}`ladplot`.
+The piece of code below we show all the above mentioned steps plus other minor steps. The output figure is saved in directory `figures` with name `LAD_<treename>_<voxel_size>.png` and shown in {numref}`ladplot`.
 
 ```python
 if downsample is not None:
@@ -319,6 +319,7 @@ name: ladplot
 LAD as a function of height for (1) solid-red, (2) solid-blue, and (3) solid-black.
 ```
 
+(sec:finstruc)=
 ## final structure
 
 In this chapter we create several files that are listed below.

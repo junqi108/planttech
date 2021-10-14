@@ -20,3 +20,7 @@ parts:
     chapters:
     - file: chapters/kiwifruit_data
       title: Kiwifruit MLS LiDAR data structure
+    - file: chapters/kiwifruit_lia
+      title: Leaf Inclination Angle (LIA) estimation
+    - file: chapters/kiwifruit_lad
+      title: Leaf Area Density (LAD) estimation

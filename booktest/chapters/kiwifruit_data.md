@@ -49,7 +49,7 @@ These point clouds can be seen in {numref}`kiwipc`.
 
 ```{figure} ../gifs/kiwifruit_pc.gif
 ---
-width: 30em
+width: 40em
 name: kiwipc
 ---
 3D vizualization of the kiwifruit point cloud (gray dots) and the trajectory of the MLS (red dots).
@@ -69,7 +69,7 @@ The downsampled trajectory of MLS can be seen in {numref}`traj`.
 
 ```{figure} ../figs/K04A_01_traj.png
 ---
-width: 30em
+width: 40em
 name: traj
 ---
 Aerial view of MLS trajectry for the current LiDAR data set.
@@ -89,7 +89,7 @@ x > -0.35y - 60
 
 ```{figure} ../figs/aerial_selected_zoom.png
 ---
-width: 30em
+width: 40em
 name: aerial_sel
 ---
 Aerial view of LiDAR. Red rectangle shows the area choosen for the analisis.
@@ -107,7 +107,7 @@ Next, within this gap, remove outliers by taking bins in the $x$ coordinate and 
 
 ```{figure} ../gifs/side_selected_foliage.gif
 ---
-width: 30em
+width: 40em
 name: foliage
 ---
 Side view of LiDAR selected region in red and the foliage selection in colours using the percentile method.
@@ -129,5 +129,68 @@ leaves = np.zeros(len(df['x']), dtype=bool)
 leaves[(keep) & (keepz)] = mask
 ```
 
+```{admonition} To-Do
+:class: important
+The leaf extraction method of the percentiles works as an approximation only. It's essential to implement a more accurate leaf extraction method, for instance, using `treeseg` to identify the trunk and branches.
+```
+
 ## Tree segmentation
 
+We left the tree segmentation for another study and instead decided to split the LiDAR selected region into 5 patches, each with same dimmensions of $10 \times 10$ m and an area of $100$ $m^2$. This is shown in {numref}`tree_seg`.
+
+```{figure} ../figs/aerial_segmentation.png
+---
+width: 50em
+name: tree_seg
+---
+Aerial view of Lidar selected region splited into 5 batches. Each batch intends to represent a tree.
+```
+
+The piece of code that does this tree segmentation is shown below and it requires the `df` and `leaves` we compute previously,
+
+```python
+def segtree(df, leaves, show=False):
+
+    trees = {}
+    bins = np.arange(10, 70, 10)
+
+    if show:
+        plt.figure(figsize=(16, 8))
+
+    for i in range(len(bins)-1):
+        keep = np.ones(len(df['x']), dtype=bool)
+        keep &= (df['y'] > 0.34*df['x'] - 4.0) & (df['y'] < 0.34*df['x'] + 6)
+        keep &= (df['x'] < -0.35*df['y'] - bins[i]) & (df['x'] > -0.35*df['y'] - bins[i+1])
+
+        trees['tree_%s' %(str(i))] = keep
+            
+        if show:
+            plt.scatter(df['x'][leaves & keep], df['y'][leaves & keep], s=0.01, label=i)
+            box = dict(facecolor='green', edgecolor='black', boxstyle='round,pad=0.5', alpha=0.4)
+            text = 'tree_%s' %(str(i))
+            xx = - (bins[i+1] + bins[i]) / 2
+            plt.text(xx - i*xx*0.02, 0.34*xx + 1, text, size=20, bbox=box)
+
+    if show:
+        plt.xlabel(r'$x$', size=20)
+        plt.ylabel(r'$y$', size=20)
+        plt.show()
+
+    return trees
+```
+
+And, as well as in previous part, we get a python dictionary `trees` where each entry corresponds to a tree in the form of a boolean array with `df` dimmensions. It's obtained running,
+
+```python
+trees = segtree(df, leaves, show=True)
+```
+
+A 3D view of the foliage for `tree_0` is shown in {numref}`kfview`.
+
+```{figure} ../gifs/kiwifruit_tree_view.gif
+---
+width: 40em
+name: kfview
+---
+3D view of the kiwifruit `tree_0` foliage.
+```
