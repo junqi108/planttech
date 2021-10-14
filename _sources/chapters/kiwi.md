@@ -1,3 +1,0 @@
-# The Data structure of LiDAR
-
-Coming soon...

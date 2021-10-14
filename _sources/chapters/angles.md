@@ -1,3 +1,4 @@
+(sec:lia)=
 # `Leaf Inclination Angle` (LIA) estimation
 
 ## Intro
@@ -97,7 +98,7 @@ for key, val in trees.items():
     lia.best_fit_pars_plot(res, key, mockname)
 ```
 
-once we find the best-fit parameters we get figure `bestfits_pars_treename>.png` that is shown in Fig. {numref}`bestfits_pars`. we use these best fits to run `lia.leaf_angle()` and get the LIA and corresponding weigths per tree. The code that does that is shown below and in Fig. {numref}`lia_dist` we show `leaf_angle_dist_<treename>.png` and in Fig. {numref}`lia_dist_h` `leaf_angle_dist_height_<treename>.png`.
+once we find the best-fit parameters we get figure `bestfits_pars_treename>.png` that is shown in {numref}`bestfits_pars`. we use these best fits to run `lia.leaf_angle()` and get the LIA and corresponding weigths per tree. The code that does that is shown below and in {numref}`lia_dist` we show `leaf_angle_dist_<treename>.png` and in {numref}`lia_dist_h` `leaf_angle_dist_height_<treename>.png`.
 
 
 ```{figure} ../gifs/bestfits_pars_tree_0.png

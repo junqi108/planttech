@@ -118,11 +118,11 @@ That's it! So what we just did? First, with function `loads.npy2pandas()` we loa
 
 outputs from this are:
 
-* `df`: Pandas DF with the entire PC
-* `leaves`: numpy boolean array of PC dimensions with True for Points concerning leaves only
-* `trees`: python dictionary where each entry contains one tree in the form of boolena array with PC dimensions
+- `df`: Pandas DF with the entire PC
+- `leaves`: numpy boolean array of PC dimensions with True for Points concerning leaves only
+- `trees`: python dictionary where each entry contains one tree in the form of boolena array with PC dimensions
 
-Below piece of code shows an example of how to visualize the leaves points from one tree only, this will be know as the `Leaves Point Cloud` (LPC) and is shown in Fig. {numref}`lpc`.
+Below piece of code shows an example of how to visualize the leaves points from one tree only, this will be know as the `Leaves Point Cloud` (LPC) and is shown in {numref}`lpc`.
 
 ```Python
 # show the point cloud from leaves of firs tree only
@@ -138,7 +138,7 @@ name: lpc
 Leaf Point Cloud.
 ```
 
-In the subsequent chapters we will be comparing our estimations with the *True* values using the `mesh.ply` file located in the root directory `test`. The following piece of code shows how we can visualize this mesh that requires importing the library `lad`. Fig. {numref}`mesh` show this mesh.
+In the subsequent chapters we will be comparing our estimations with the *True* values using the `mesh.ply` file located in the root directory `test`. The following piece of code shows how we can visualize this mesh that requires importing the library `lad`. {numref}`mesh` show this mesh.
 
 ```Python
 import lad

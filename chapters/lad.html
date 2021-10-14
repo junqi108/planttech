@@ -53,7 +53,7 @@
     <script async="async" src="../_static/sphinx-thebe.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="The Data structure of LiDAR" href="kiwi.html" />
+    <link rel="next" title="Kiwifruit MLS LiDAR data structure" href="kiwifruit_data.html" />
     <link rel="prev" title="Leaf Inclination Angle (LIA) estimation" href="angles.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
@@ -129,8 +129,18 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="kiwi.html">
-   The Data structure of LiDAR
+  <a class="reference internal" href="kiwifruit_data.html">
+   Kiwifruit MLS LiDAR data structure
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_lia.html">
+   Leaf Inclination Angle (LIA) estimation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_lad.html">
+   Leaf Area Density (LAD) estimation
   </a>
  </li>
 </ul>
@@ -302,7 +312,7 @@
 </div>
 <div class="admonition important">
 <p class="admonition-title">Important</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">downsample</span></code> step is very important as we notice that there’s a relation between <code class="docutils literal notranslate"><span class="pre">downsample</span></code> and the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> that does not seem to affect the estimation of the LAD. This relationship can be seen in figure <a class="reference internal" href="#downsample-samples"><span class="std std-numref">Fig. 8</span></a> where the lower the <code class="docutils literal notranslate"><span class="pre">downsample</span></code> is, the higher the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> needs to be.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">downsample</span></code> step is very important as we notice that there’s a relation between <code class="docutils literal notranslate"><span class="pre">downsample</span></code> and the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> that does not seem to affect the estimation of the LAD. This relationship can be seen in <a class="reference internal" href="#downsample-samples"><span class="std std-numref">Fig. 8</span></a> where the lower the <code class="docutils literal notranslate"><span class="pre">downsample</span></code> is, the higher the <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> needs to be.</p>
 <div class="figure align-default" id="downsample-samples">
 <a class="reference internal image-reference" href="../_images/lads_downsample_samples.png"><img alt="../_images/lads_downsample_samples.png" src="../_images/lads_downsample_samples.png" style="width: 40em;" /></a>
 <p class="caption"><span class="caption-number">Fig. 8 </span><span class="caption-text">LAD estimation (blue and red) vs Truth (black) as a function of height. From left to right figure shows estimated LADs for a <code class="docutils literal notranslate"><span class="pre">downsample</span></code> of <span class="math notranslate nohighlight">\(75 \%\)</span>, <span class="math notranslate nohighlight">\(50 \%\)</span>, <span class="math notranslate nohighlight">\(25 \%\)</span>, and <span class="math notranslate nohighlight">\(10 \%\)</span> respectively. All estimations use a <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> of <span class="math notranslate nohighlight">\(0.1\)</span>.ret0</span><a class="headerlink" href="#downsample-samples" title="Permalink to this image">¶</a></p>
@@ -473,7 +483,7 @@
 <li><p>Without <span class="math notranslate nohighlight">\(\alpha(\theta, K)\)</span> correction</p></li>
 <li><p>Truth LAD from mesh file.</p></li>
 </ol>
-<p>The piece of code below we show all the above mentioned steps plus other minor steps. The output figure is saved in directory <code class="docutils literal notranslate"><span class="pre">figures</span></code> with name <code class="docutils literal notranslate"><span class="pre">LAD_&lt;treename&gt;_&lt;voxel_size&gt;.png</span></code> and shown in Fig. <a class="reference internal" href="#ladplot"><span class="std std-numref">Fig. 14</span></a>.</p>
+<p>The piece of code below we show all the above mentioned steps plus other minor steps. The output figure is saved in directory <code class="docutils literal notranslate"><span class="pre">figures</span></code> with name <code class="docutils literal notranslate"><span class="pre">LAD_&lt;treename&gt;_&lt;voxel_size&gt;.png</span></code> and shown in <a class="reference internal" href="#ladplot"><span class="std std-numref">Fig. 14</span></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">inds_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;inds.npy&#39;</span><span class="p">)</span>
     <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">inds_file</span><span class="p">)</span>
@@ -527,7 +537,7 @@
 </div>
 </div>
 <div class="section" id="final-structure">
-<h2>final structure<a class="headerlink" href="#final-structure" title="Permalink to this headline">¶</a></h2>
+<span id="sec-finstruc"></span><h2>final structure<a class="headerlink" href="#final-structure" title="Permalink to this headline">¶</a></h2>
 <p>In this chapter we create several files that are listed below.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>root
 └───data
@@ -599,10 +609,10 @@
         </a>
     </div>
      <div id="next">
-        <a class="right-next" href="kiwi.html" title="next page">
+        <a class="right-next" href="kiwifruit_data.html" title="next page">
             <div class="prevnext-info">
                 <p class="prevnext-label">next</p>
-                <p class="prevnext-title">The Data structure of LiDAR</p>
+                <p class="prevnext-title">Kiwifruit MLS LiDAR data structure</p>
             </div>
             <i class="prevnext-label fas fa-angle-right"></i>
         </a>

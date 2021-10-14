@@ -9,3 +9,6 @@ The following include the process to extract the `Leaf Inclination Angle` (LIA) 
     - Leaf Area Density (LAD) estimation
   
 - **Aplication on Kiwkifruit LiDAR dataset**
+    - Kiwifruit MLS LiDAR data structure
+    - Leaf Inclination Angle (LIA) estimation
+    - Leaf Area Density (LAD) estimation

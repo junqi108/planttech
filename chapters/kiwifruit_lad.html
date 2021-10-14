@@ -1,0 +1,658 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leaf Area Density (LAD) estimation &#8212; Towards kiwifruit canopy reconstruction with LiDAR technology</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["\\(", "\\)"]], "displayMath": [["\\[", "\\]"]], "processRefs": false, "processEnvironments": false}})</script>
+    <script async="async" src="https://unpkg.com/thebe@0.5.1/lib/index.js"></script>
+    <script >
+        const thebe_selector = ".thebe"
+        const thebe_selector_input = "pre"
+        const thebe_selector_output = ".output"
+    </script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Leaf Inclination Angle (LIA) estimation" href="kiwifruit_lia.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Towards kiwifruit canopy reconstruction with LiDAR technology</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="outline.html">
+   Outline
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  LiDAR simulation on mockup trees with BLENSOR
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="mocktree.html">
+   Toy tree and sensor specifications
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="data.html">
+   Data structure
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="angles.html">
+   Leaf Inclination Angle (LIA) estimation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="lad.html">
+   Leaf Area Density (LAD) estimation
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Aplication on real Kiwkifruit LiDAR dataset
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_data.html">
+   Kiwifruit MLS LiDAR data structure
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_lia.html">
+   Leaf Inclination Angle (LIA) estimation
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Leaf Area Density (LAD) estimation
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/chapters/kiwifruit_lad.md"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.md</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/executablebooks/jupyter-book"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        <a class="issues-button"
+            href="https://github.com/executablebooks/jupyter-book/issues/new?title=Issue%20on%20page%20%2Fchapters/kiwifruit_lad.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#intro">
+   Intro
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lad-results-for-three-different-voxel-size-inputs">
+   LAD results for three different
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     voxel_size
+    </span>
+   </code>
+   inputs
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#alpha-theta-results">
+     <span class="math notranslate nohighlight">
+      \(\alpha(\theta)\)
+     </span>
+     results
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#lad-for-tree-0">
+     LAD for
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       tree_0
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#lad-for-tree-1">
+     LAD for
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       tree_1
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#lad-for-tree-2">
+     LAD for
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       tree_2
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#lad-for-tree-3">
+     LAD for
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       tree_3
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#lad-for-tree-4">
+     LAD for
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       tree_4
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="leaf-area-density-lad-estimation">
+<h1><code class="docutils literal notranslate"><span class="pre">Leaf</span> <span class="pre">Area</span> <span class="pre">Density</span></code> (LAD) estimation<a class="headerlink" href="#leaf-area-density-lad-estimation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="intro">
+<h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h2>
+<p>We have the same file structure as in <a class="reference internal" href="lad.html#sec-finstruc"><span class="std std-ref">final structure</span></a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>root
+│   requirements.yml
+│   readme.md  
+│
+└───data
+    └───kiwifruit
+        │   lidar.laz
+        │   trajectory.dbf
+        └───lad_&lt;downsample&gt;
+        │   │   inds.npy
+        │   │   m3s_&lt;treename&gt;_&lt;voxel_size&gt;.npy
+        │   │   m3count_&lt;treename&gt;_&lt;voxel_size&gt;.npy
+        │   └───figures
+        │       │   alphas_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        │       │   bia_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        │       │   bia_per_k_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        │       │   LAD_&lt;treename&gt;_&lt;voxel_size&gt;.png
+        └───lia
+            │   angles_&lt;treename&gt;.npy
+            │   weights_&lt;treename&gt;.npy
+            │   leaf_angle_dist_&lt;treename&gt;.png
+            │   leaf_angle_dist_height_&lt;treename&gt;.png
+</pre></div>
+</div>
+</div>
+<div class="section" id="lad-results-for-three-different-voxel-size-inputs">
+<h2>LAD results for three different <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> inputs<a class="headerlink" href="#lad-results-for-three-different-voxel-size-inputs" title="Permalink to this headline">¶</a></h2>
+<p>Since the relation between the two input parameters (<code class="docutils literal notranslate"><span class="pre">downsample</span></code>, and <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code>) of this pipeline to derive the LAD is left for another study, we choose three different <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> inputs <span class="math notranslate nohighlight">\(0.05\)</span>, <span class="math notranslate nohighlight">\(0.1\)</span>, and <span class="math notranslate nohighlight">\(0.15\)</span> which corresponds to <span class="math notranslate nohighlight">\(5\)</span>, <span class="math notranslate nohighlight">\(10\)</span>, and <span class="math notranslate nohighlight">\(15\)</span> cm respectively. We choose one <code class="docutils literal notranslate"><span class="pre">downsample</span></code> value of <span class="math notranslate nohighlight">\(0.005\)</span> which corresponds to <span class="math notranslate nohighlight">\(0.5\)</span> per cent out of total LiDAR beams of <span class="math notranslate nohighlight">\(\sim 40,000,000\)</span>.</p>
+<p>The code to compute <span class="math notranslate nohighlight">\(n_{P}(k)\)</span> is similar to the one in <a class="reference internal" href="lad.html#sec-np"><span class="std std-ref">Computing n_{P}(k)</span></a> with some minor differences,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">POINTS</span> <span class="o">=</span> <span class="n">loads</span><span class="o">.</span><span class="n">DF2array</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]])</span>
+<span class="n">SENSORS</span> <span class="o">=</span> <span class="n">loads</span><span class="o">.</span><span class="n">DF2array</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s1">&#39;xs&#39;</span><span class="p">,</span> <span class="s1">&#39;ys&#39;</span><span class="p">,</span> <span class="s1">&#39;zs&#39;</span><span class="p">]])</span>
+
+<span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;lad_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">downsample</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">resdir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">resdir</span><span class="p">)</span>
+
+    <span class="n">outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;inds.npy&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;inds file already exists for donwnsample of </span><span class="si">%.3f</span><span class="s1"> at </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">downsample</span><span class="p">,</span> <span class="n">outdir</span><span class="p">))</span>
+
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+        <span class="n">sensors</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;inds not been created yet for donwnsample of </span><span class="si">%.3f</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">downsample</span><span class="p">))</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">*</span> <span class="n">downsample</span><span class="p">))</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">inds</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+        <span class="n">sensors</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">inds</span><span class="p">)</span>
+
+<span class="k">else</span><span class="p">:</span>
+
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;lad&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">resdir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">resdir</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">sample</span><span class="p">))</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">sensors</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trees</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+    <span class="n">inPR</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+    <span class="n">pointsPR</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inPR</span><span class="p">]</span>
+    <span class="n">m3s</span><span class="p">,</span> <span class="n">m3count</span><span class="o">=</span> <span class="n">rayt</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">sensors</span><span class="p">,</span> <span class="n">pointsPR</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">resdir</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="n">show</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The code to compute <span class="math notranslate nohighlight">\(n_{I}(k)\)</span> and LAD is as well similar to <a class="reference internal" href="lad.html#sec-ni"><span class="std std-ref">Computing n_{I}(k)</span></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">downsample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">inds_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;inds.npy&#39;</span><span class="p">)</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">inds_file</span><span class="p">)</span>
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;lad_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">downsample</span><span class="p">)))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;downsample:&#39;</span><span class="p">,</span> <span class="n">downsample</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">resdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;lad&#39;</span><span class="p">)</span>
+
+<span class="n">isfigures</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;figures&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">isfigures</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">isfigures</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;voxel_size:&#39;</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trees</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+    <span class="n">inPR</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+    <span class="n">pointsPR</span> <span class="o">=</span> <span class="n">POINTS</span><span class="p">[</span><span class="n">inPR</span><span class="p">]</span>
+    <span class="n">sensorsPR</span> <span class="o">=</span> <span class="n">SENSORS</span><span class="p">[</span><span class="n">inPR</span><span class="p">]</span>
+
+    <span class="n">m3att</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">compute_attributes</span><span class="p">(</span><span class="n">pointsPR</span><span class="p">,</span> <span class="n">resdir</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="c1"># get in down sample boolean array for LPC size</span>
+    <span class="n">inds_</span> <span class="o">=</span> <span class="n">inds</span><span class="p">[(</span><span class="n">val</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)]</span>
+    <span class="n">lias</span><span class="p">,</span> <span class="n">ws</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">downsample_lia</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">inds_</span><span class="p">)</span>
+    <span class="n">voxk</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_voxk</span><span class="p">(</span><span class="n">pointsPR</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">)</span>
+    <span class="n">bia</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_bia</span><span class="p">(</span><span class="n">pointsPR</span><span class="p">,</span> <span class="n">sensorsPR</span><span class="p">)</span>
+
+    <span class="n">figext</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">voxel_size</span><span class="p">))</span>
+    <span class="n">alphas_k</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">alpha_k</span><span class="p">(</span><span class="n">bia</span><span class="p">,</span> <span class="n">voxk</span><span class="p">,</span> <span class="n">lias</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">resdir</span><span class="p">,</span>    <span class="n">figext</span><span class="o">=</span><span class="n">figext</span><span class="p">,</span> <span class="n">klia</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_true_lia</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">kbins</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="n">lads_mid</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_LADS</span><span class="p">(</span><span class="n">m3att</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">kbins</span><span class="p">,</span> <span class="n">alphas_k</span><span class="p">[:,</span><span class="mi">6</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">lads_0</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_LADS</span><span class="p">(</span><span class="n">m3att</span><span class="p">,</span> <span class="n">voxel_size</span><span class="p">,</span> <span class="n">kbins</span><span class="p">,</span> <span class="n">alphas_k</span><span class="p">[:,</span><span class="mi">6</span><span class="p">]</span><span class="o">*</span><span class="mi">0</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="n">lads</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Correction Mean&#39;</span><span class="p">:</span><span class="n">lads_mid</span><span class="p">,</span> <span class="s1">&#39;No Correction&#39;</span><span class="p">:</span><span class="n">lads_0</span><span class="p">}</span>
+
+    <span class="n">savefig</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">resdir</span><span class="p">,</span> <span class="s1">&#39;figures&#39;</span><span class="p">,</span><span class="s1">&#39;LAD_</span><span class="si">%s</span><span class="s1">.png&#39;</span> <span class="o">%</span><span class="p">(</span><span class="n">figext</span><span class="p">))</span>
+    <span class="n">figures</span><span class="o">.</span><span class="n">plot_lads</span><span class="p">(</span><span class="n">lads</span><span class="p">,</span> <span class="n">savefig</span><span class="o">=</span><span class="n">savefig</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="alpha-theta-results">
+<h3><span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> results<a class="headerlink" href="#alpha-theta-results" title="Permalink to this headline">¶</a></h3>
+<p>In <a class="reference internal" href="#kalpha-05"><span class="std std-numref">Fig. 26</span></a>, <a class="reference internal" href="#kalpha-1"><span class="std std-numref">Fig. 27</span></a>, and <a class="reference internal" href="#kalpha-15"><span class="std std-numref">Fig. 28</span></a> we show <span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> for <code class="docutils literal notranslate"><span class="pre">tree_1</span></code> and for the three different <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> values.</p>
+<div class="figure align-default" id="kalpha-05">
+<a class="reference internal image-reference" href="../_images/kiwi_alphas_tree_1_0.05.png"><img alt="../_images/kiwi_alphas_tree_1_0.05.png" src="../_images/kiwi_alphas_tree_1_0.05.png" style="width: 30em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 26 </span><span class="caption-text"><span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> for <code class="docutils literal notranslate"><span class="pre">tree_1</span></code> using a <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> of <span class="math notranslate nohighlight">\(0.05\)</span>.</span><a class="headerlink" href="#kalpha-05" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="kalpha-1">
+<a class="reference internal image-reference" href="../_images/kiwi_alphas_tree_1_0.1.png"><img alt="../_images/kiwi_alphas_tree_1_0.1.png" src="../_images/kiwi_alphas_tree_1_0.1.png" style="width: 30em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 27 </span><span class="caption-text"><span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> for <code class="docutils literal notranslate"><span class="pre">tree_1</span></code> using a <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> of <span class="math notranslate nohighlight">\(0.1\)</span>.</span><a class="headerlink" href="#kalpha-1" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="kalpha-15">
+<a class="reference internal image-reference" href="../_images/kiwi_alphas_tree_1_0.15.png"><img alt="../_images/kiwi_alphas_tree_1_0.15.png" src="../_images/kiwi_alphas_tree_1_0.15.png" style="width: 30em;" /></a>
+<p class="caption"><span class="caption-number">Fig. 28 </span><span class="caption-text"><span class="math notranslate nohighlight">\(\alpha(\theta)\)</span> for <code class="docutils literal notranslate"><span class="pre">tree_1</span></code> using a <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> of <span class="math notranslate nohighlight">\(0.15\)</span>.</span><a class="headerlink" href="#kalpha-15" title="Permalink to this image">¶</a></p>
+</div>
+<p>LAD results for <code class="docutils literal notranslate"><span class="pre">tree_0</span></code> trhough <code class="docutils literal notranslate"><span class="pre">tree_4</span></code>, and for each <code class="docutils literal notranslate"><span class="pre">voxel_size</span></code> is shown in Figures below.</p>
+</div>
+<div class="section" id="lad-for-tree-0">
+<h3>LAD for <code class="docutils literal notranslate"><span class="pre">tree_0</span></code><a class="headerlink" href="#lad-for-tree-0" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.05</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.1</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.15</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_0_0.05.png"><img alt="../_images/kiwi_LAD_tree_0_0.05.png" src="../_images/kiwi_LAD_tree_0_0.05.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_0_0.1.png"><img alt="../_images/kiwi_LAD_tree_0_0.1.png" src="../_images/kiwi_LAD_tree_0_0.1.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_0_0.15.png"><img alt="../_images/kiwi_LAD_tree_0_0.15.png" src="../_images/kiwi_LAD_tree_0_0.15.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="lad-for-tree-1">
+<h3>LAD for <code class="docutils literal notranslate"><span class="pre">tree_1</span></code><a class="headerlink" href="#lad-for-tree-1" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.05</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.1</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.15</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_1_0.05.png"><img alt="../_images/kiwi_LAD_tree_1_0.05.png" src="../_images/kiwi_LAD_tree_1_0.05.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_1_0.1.png"><img alt="../_images/kiwi_LAD_tree_1_0.1.png" src="../_images/kiwi_LAD_tree_1_0.1.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_1_0.15.png"><img alt="../_images/kiwi_LAD_tree_1_0.15.png" src="../_images/kiwi_LAD_tree_1_0.15.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="lad-for-tree-2">
+<h3>LAD for <code class="docutils literal notranslate"><span class="pre">tree_2</span></code><a class="headerlink" href="#lad-for-tree-2" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.05</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.1</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.15</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_2_0.05.png"><img alt="../_images/kiwi_LAD_tree_2_0.05.png" src="../_images/kiwi_LAD_tree_2_0.05.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_2_0.1.png"><img alt="../_images/kiwi_LAD_tree_2_0.1.png" src="../_images/kiwi_LAD_tree_2_0.1.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_2_0.15.png"><img alt="../_images/kiwi_LAD_tree_2_0.15.png" src="../_images/kiwi_LAD_tree_2_0.15.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="lad-for-tree-3">
+<h3>LAD for <code class="docutils literal notranslate"><span class="pre">tree_3</span></code><a class="headerlink" href="#lad-for-tree-3" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.05</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.1</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.15</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_3_0.05.png"><img alt="../_images/kiwi_LAD_tree_3_0.05.png" src="../_images/kiwi_LAD_tree_3_0.05.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_3_0.1.png"><img alt="../_images/kiwi_LAD_tree_3_0.1.png" src="../_images/kiwi_LAD_tree_3_0.1.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_3_0.15.png"><img alt="../_images/kiwi_LAD_tree_3_0.15.png" src="../_images/kiwi_LAD_tree_3_0.15.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="lad-for-tree-4">
+<h3>LAD for <code class="docutils literal notranslate"><span class="pre">tree_4</span></code><a class="headerlink" href="#lad-for-tree-4" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-auto table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.05</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.1</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">voxel_size=0.15</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_4_0.05.png"><img alt="../_images/kiwi_LAD_tree_4_0.05.png" src="../_images/kiwi_LAD_tree_4_0.05.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_4_0.1.png"><img alt="../_images/kiwi_LAD_tree_4_0.1.png" src="../_images/kiwi_LAD_tree_4_0.1.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+<td><p><div class="figure align-default">
+<a class="reference internal image-reference" href="../_images/kiwi_LAD_tree_4_0.15.png"><img alt="../_images/kiwi_LAD_tree_4_0.15.png" src="../_images/kiwi_LAD_tree_4_0.15.png" style="width: 18em;" /></a>
+</div>
+</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./chapters"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+        
+            
+
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="kiwifruit_lia.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title"><code class="docutils literal notranslate"><span class="pre">Leaf</span> <span class="pre">Inclination</span> <span class="pre">Angle</span></code> (LIA) estimation</p>
+            </div>
+        </a>
+    </div>
+
+</div>
+        
+        </div>
+    </div>
+    <footer class="footer">
+    <div class="container">
+      <p>
+        
+          By Dr. Omar Ruiz-Macias Dr. Alvaro Orsi<br/>
+        
+            &copy; Copyright 2021.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

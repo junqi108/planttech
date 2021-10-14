@@ -129,8 +129,18 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="kiwi.html">
-   The Data structure of LiDAR
+  <a class="reference internal" href="kiwifruit_data.html">
+   Kiwifruit MLS LiDAR data structure
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_lia.html">
+   Leaf Inclination Angle (LIA) estimation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_lad.html">
+   Leaf Area Density (LAD) estimation
   </a>
  </li>
 </ul>
@@ -350,7 +360,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">leaves</span></code>: numpy boolean array of PC dimensions with True for Points concerning leaves only</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">trees</span></code>: python dictionary where each entry contains one tree in the form of boolena array with PC dimensions</p></li>
 </ul>
-<p>Below piece of code shows an example of how to visualize the leaves points from one tree only, this will be know as the <code class="docutils literal notranslate"><span class="pre">Leaves</span> <span class="pre">Point</span> <span class="pre">Cloud</span></code> (LPC) and is shown in Fig. <a class="reference internal" href="#lpc"><span class="std std-numref">Fig. 3</span></a>.</p>
+<p>Below piece of code shows an example of how to visualize the leaves points from one tree only, this will be know as the <code class="docutils literal notranslate"><span class="pre">Leaves</span> <span class="pre">Point</span> <span class="pre">Cloud</span></code> (LPC) and is shown in <a class="reference internal" href="#lpc"><span class="std std-numref">Fig. 3</span></a>.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="c1"># show the point cloud from leaves of firs tree only</span>
 <span class="n">keep</span> <span class="o">=</span> <span class="p">(</span><span class="n">trees</span><span class="p">[</span><span class="s1">&#39;tree_0&#39;</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">leaves</span><span class="p">)</span>
 <span class="n">loads</span><span class="o">.</span><span class="n">showPCfromDF</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">keep</span><span class="p">])</span>
@@ -360,7 +370,7 @@
 <a class="reference internal image-reference" href="../_images/lpc.gif"><img alt="../_images/lpc.gif" src="../_images/lpc.gif" style="width: 30em;" /></a>
 <p class="caption"><span class="caption-number">Fig. 3 </span><span class="caption-text">Leaf Point Cloud.</span><a class="headerlink" href="#lpc" title="Permalink to this image">¶</a></p>
 </div>
-<p>In the subsequent chapters we will be comparing our estimations with the <em>True</em> values using the <code class="docutils literal notranslate"><span class="pre">mesh.ply</span></code> file located in the root directory <code class="docutils literal notranslate"><span class="pre">test</span></code>. The following piece of code shows how we can visualize this mesh that requires importing the library <code class="docutils literal notranslate"><span class="pre">lad</span></code>. Fig. <a class="reference internal" href="#mesh"><span class="std std-numref">Fig. 4</span></a> show this mesh.</p>
+<p>In the subsequent chapters we will be comparing our estimations with the <em>True</em> values using the <code class="docutils literal notranslate"><span class="pre">mesh.ply</span></code> file located in the root directory <code class="docutils literal notranslate"><span class="pre">test</span></code>. The following piece of code shows how we can visualize this mesh that requires importing the library <code class="docutils literal notranslate"><span class="pre">lad</span></code>. <a class="reference internal" href="#mesh"><span class="std std-numref">Fig. 4</span></a> show this mesh.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">lad</span>
 <span class="n">meshfile</span> <span class="o">=</span> <span class="n">lad</span><span class="o">.</span><span class="n">get_meshfile</span><span class="p">(</span><span class="n">mockname</span><span class="p">)</span>
 <span class="n">lad</span><span class="o">.</span><span class="n">see_mesh</span><span class="p">(</span><span class="n">meshfile</span><span class="p">)</span>

@@ -129,8 +129,18 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="kiwi.html">
-   The Data structure of LiDAR
+  <a class="reference internal" href="kiwifruit_data.html">
+   Kiwifruit MLS LiDAR data structure
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_lia.html">
+   Leaf Inclination Angle (LIA) estimation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="kiwifruit_lad.html">
+   Leaf Area Density (LAD) estimation
   </a>
  </li>
 </ul>
@@ -245,7 +255,7 @@
 <h1>Toy tree and sensor specifications<a class="headerlink" href="#toy-tree-and-sensor-specifications" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="dimensions">
 <h2>Dimensions<a class="headerlink" href="#dimensions" title="Permalink to this headline">¶</a></h2>
-<p>The toy tree we chose has some complexity as shown in Fig. <a class="reference internal" href="#toy-tree"><span class="std std-numref">Fig. 1</span></a>. It has a <code class="docutils literal notranslate"><span class="pre">leaf</span> <span class="pre">size</span></code> of <span class="math notranslate nohighlight">\(0.25\)</span> and dimensions in meters (m):</p>
+<p>The toy tree we chose has some complexity as shown in <a class="reference internal" href="#toy-tree"><span class="std std-numref">Fig. 1</span></a>. It has a <code class="docutils literal notranslate"><span class="pre">leaf</span> <span class="pre">size</span></code> of <span class="math notranslate nohighlight">\(0.25\)</span> and dimensions in meters (m):</p>
 <ul class="simple">
 <li><p><span class="math notranslate nohighlight">\(\Delta x = 9.1\)</span></p></li>
 <li><p><span class="math notranslate nohighlight">\(\Delta y = 9.2\)</span></p></li>
@@ -258,7 +268,7 @@
 </div>
 <div class="section" id="scann-pattern-and-sensor-resolution">
 <h2>Scann pattern and sensor resolution<a class="headerlink" href="#scann-pattern-and-sensor-resolution" title="Permalink to this headline">¶</a></h2>
-<p>The toy tree was scanned <span class="math notranslate nohighlight">\(7\)</span> times as the <a class="reference internal" href="#scanntree"><span class="std std-numref">Fig. 2</span></a> shows. Each scan has a resolution of <span class="math notranslate nohighlight">\(150\)</span> points across vertical and horizontal sensor, and a field of view of <span class="math notranslate nohighlight">\(40\)</span> degrees for each side. Total number of points per sensor scan is: <span class="math notranslate nohighlight">\(150 x 150 = 22,500\)</span>.</p>
+<p>The toy tree was scanned <span class="math notranslate nohighlight">\(7\)</span> times as the <a class="reference internal" href="#scanntree"><span class="std std-numref">Fig. 2</span></a> shows. Each scan has a resolution of <span class="math notranslate nohighlight">\(150\)</span> points across vertical and horizontal sensor, and a field of view of <span class="math notranslate nohighlight">\(40\)</span> degrees for each side. Total number of points per sensor scan is: <span class="math notranslate nohighlight">\(150 \times 150 = 22,500\)</span>.</p>
 <div class="figure align-default" id="scanntree">
 <a class="reference internal image-reference" href="../_images/scann.gif"><img alt="../_images/scann.gif" src="../_images/scann.gif" style="width: 30em;" /></a>
 <p class="caption"><span class="caption-number">Fig. 2 </span><span class="caption-text">Toy tree scene with sensors scanner patter.</span><a class="headerlink" href="#scanntree" title="Permalink to this image">¶</a></p>
