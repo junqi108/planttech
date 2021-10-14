@@ -1,5 +1,5 @@
 
-### *For a full documentation see:* [docs](https://qmxp55.github.io/planttech)
+<!-- ### *For a full documentation see:* [docs](https://qmxp55.github.io/planttech) -->
 # Outline
 
 The following include the process to extract the `Leaf Inclination Angle` (LIA) with respect to zenith, the `Leaf Area Index` (LAI), and the `Leaf Area Density` (LAD) of a point cloud (PC). We test our pipeline using a mockup point cloud generated in `Blensor` software. This process is outlined below:
