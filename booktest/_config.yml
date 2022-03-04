@@ -12,6 +12,10 @@ execute:
 # execute:
 #   execute_notebooks: force
 
+sphinx:
+    extra_extensions:
+    - sphinx_jupyterbook_latex
+
 # Define the name of the latex output file for PDF builds
 latex:
   latex_documents:

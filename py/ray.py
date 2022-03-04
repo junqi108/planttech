@@ -105,18 +105,27 @@ def get_matPR(vox, voxel_size):
     # print(width, height, depth)
     voxs = o3d.geometry.VoxelGrid.create_dense(origin=vox.origin, color=np.array([0,0,1]), voxel_size=voxel_size, width=width, height=height, depth=depth)
 
+    # get voxel grid indexes for points and beams voxels
+    voxp_idx = lad.get_voxels(vox)
+
     # Get solid voxel grid indexes
     voxs_idx = lad.get_voxels(voxs)
 
     # get i,j,k max and min
-    vdict = lad.idx_bounds(voxs_idx, True)
+    vdict = lad.idx_bounds(voxs_idx, False)
     # ijk_bounds = np.array(list(vdict.values())).reshape(1,6)[0]
 
     # create 3D boolean matrix of i,j,k size
     m3s = np.zeros(np.array(vdict['ijk_max'])+1, dtype=bool)
     # print(m3s.shape)
 
-    return m3s, voxs
+    # fill 3D matrix with True if voxel exist
+    # m3p = m3s.copy()
+    # for (i,j,k) in voxp_idx:
+        
+    #     m3p[i][j][k] = True
+
+    return m3s, voxs, voxp_idx
 
 
 def intercept(ray, boxPR, voxel_size):
@@ -469,10 +478,20 @@ def PCdensity(mockname, voxel_size):
 def main(points, sensors, pointsPR, voxel_size, resdir, treename, show=False):
 
     voxPR, minBB, maxBB = prAABB(pointsPR, voxel_size)
-    width, height, depth = maxBB - minBB
+    width, height, depth = maxBB - minBB 
 
     # Get 3D-boolean-array of plant region dimmensions and solid voxel
-    m3s, voxs = get_matPR(vox=voxPR, voxel_size=voxel_size)
+    m3s, voxs, voxp_idx = get_matPR(vox=voxPR, voxel_size=voxel_size)
+    m3s2 = m3s.copy()
+    voxp_idx = np.array(voxp_idx)
+    voxp_idx_s = [''.join([str(i[0]), str(i[1]), str(i[2])]) for i in voxp_idx]
+    # m3t = m3s.copy()
+
+    # print('Number of voxels ocupied by points cloud: \t %i' %(m3p.sum()))
+    # m3pidx = np.where(m3p)
+    # print(voxp_idx)
+    # print(len(voxp_idx))
+
     totvox = (~m3s).sum()
     AABB2vgidx = lambda boxes: [voxs.get_voxel(pyrr.aabb.centre_point(box)).tolist() for box in boxes]
     # create BB for ray interception
@@ -509,18 +528,68 @@ def main(points, sensors, pointsPR, voxel_size, resdir, treename, show=False):
 
         if res is not None:
 
+            # print('In PR!!!')
+
             boxes = intercept(ray, boxPR, voxel_size)
 
             try:
+                # get voxel grid IDX from AABB
                 idx = np.array(AABB2vgidx(boxes))
-                m3s[idx.T[0], idx.T[1], idx.T[2]] = True
+                idx_s = [''.join([str(i[0]), str(i[1]), str(i[2])]) for i in idx]
+                # Does voxel where ray pass trhough is in a voxel occupied by point cloud?
+                inm3p = np.in1d(idx_s, voxp_idx_s)
+
+
+                # print('voxp_idx', voxp_idx)
+                # print('len voxp_idx', len(voxp_idx_s))
+                
+                # inm3p = [i in np.array(voxp_idx) for i in idx]
+                # for i in idx:
+                #     if i in voxp_idx:
+                #         print(i, voxp_idx[voxp_idx == i])
+                # inm3p = np.array(inm3p)
+                # print('len inm3p', len(inm3p), len(idx), len(idx_s))
+                # print('# matches:', np.sum(inm3p))
+                # print(inm3p)
+
+                inmin = np.zeros(len(inm3p), dtype=bool)
+                voxkeep = np.ones(len(inm3p), dtype=bool)
+
+                if inm3p.any() and np.sum(inm3p) < len(idx_s):
+                    # print('len idx', len(idx_s))
+                    # print('# matches:', np.sum(inm3p))
+                    
+                    # get the distances from all boxes to the source point (i.e. sensors)
+                    voxel_distance = np.array([np.linalg.norm(p2 - pyrr.aabb.centre_point(box).tolist()) for box in boxes])
+                    
+                    # Find distance to closest voxels with attribute 1
+                    dist_min = np.min(np.unique(voxel_distance[inm3p]))
+                    inmin = voxel_distance == dist_min
+
+                    # keep voxels with distance greater than distance to closest voxel with attribute 1
+                    voxkeep = voxel_distance < dist_min
+                    
+                elif np.sum(inm3p) == len(idx_s):
+                    continue
+                    
+                # else:
+                    # print('No Match!!!')
+
+                if not voxkeep.any():
+                    # print('voxkeep is FALSE!!!')
+                    continue
+
+
+                # 3D array with True where all rays pass trhough
+                m3s[idx[voxkeep].T[0], idx[voxkeep].T[1], idx[voxkeep].T[2]] = True
+                m3s2[idx.T[0], idx.T[1], idx.T[2]] = True
                 m3count[idx.T[0], idx.T[1], idx.T[2]] += 1
             except Exception as e:
                 print(e)
 
             if show:
 
-                for box in boxes:
+                for box, isinm3p, isinmin, isvoxkeep in zip(boxes, inm3p, inmin, voxkeep):
 
                     minBB, maxBB = box
                     minBB = np.array(minBB)
@@ -529,13 +598,23 @@ def main(points, sensors, pointsPR, voxel_size, resdir, treename, show=False):
                     # plot bounding box
                     positions = [(minBB[0], minBB[1], minBB[2])]
                     sizes = [(width, height, depth)]
-                    pc = plotCubeAt2(positions,sizes,colors=[0,1,0,0.4], edgecolor="k")
+
+                    if isinmin:
+                        pc = plotCubeAt2(positions,sizes,colors=[1,0,0,0.4], edgecolor="k")
+                    elif isinm3p and not isinmin:
+                        pc = plotCubeAt2(positions,sizes,colors=[0,0,1,0.4], edgecolor="k")
+                    elif isvoxkeep:
+                        pc = plotCubeAt2(positions,sizes,colors=[0,1,0,0.4], edgecolor="k")
+                    else:
+                        pc = plotCubeAt2(positions,sizes,colors=[1,0,1,0.4], edgecolor="k")
                     ax.add_collection3d(pc)
 
                 ax.plot(*line.T.tolist())
                 ax.scatter3D(*p1, c='g', s=10)
                 ax.scatter3D(*res, c='k', s=10)
 
+        # else:
+        #     print('Not in PR!!!!')
     if show: 
         plt.show()
 
@@ -543,7 +622,150 @@ def main(points, sensors, pointsPR, voxel_size, resdir, treename, show=False):
     print('voxels hitted: \t %i' %(m3s.sum()))
     print('Percentage of voxels hitted by beam: %.2f' %(m3s.sum()/totvox))
 
+    print('voxels hitted (OLD): \t %i' %(m3s2.sum()))
+    print('Percentage of voxels hitted by beam (OLD): %.2f' %(m3s2.sum()/totvox))
+
     np.save(outdir, m3s)
     np.save(outdir_count, m3count)
 
-    return m3s, m3count
+    return m3s
+
+
+def main2(points, sensors, pointsPR, voxel_size, resdir, treename, PRbounds, show=False):
+
+    # voxPR, minBB, maxBB = prAABB(pointsPR, voxel_size)
+    # width, height, depth = maxBB - minBB
+
+    # Create voxel of plant region
+    # width, height, depth = PRbounds[1] - PRbounds[0]
+    # voxPR = o3d.geometry.VoxelGrid.create_dense(origin=PRbounds[0], color=np.array([0,0,1]), voxel_size=voxel_size, width=width, height=height, depth=depth)
+
+    pcd = loads.points2pcd(pointsPR)
+    voxPR = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
+    width, height, depth = PRbounds[1] - PRbounds[0]
+
+    # Get 3D-boolean-array of plant region dimmensions and solid voxel
+    m3s, voxs, voxp_idx = get_matPR(vox=voxPR, voxel_size=voxel_size)
+    m3s2 = m3s.copy()
+    voxp_idx = np.array(voxp_idx)
+    voxp_idx_s = [''.join([str(i[0]), str(i[1]), str(i[2])]) for i in voxp_idx]
+
+    totvox = (~m3s).sum()
+    AABB2vgidx = lambda boxes: [voxs.get_voxel(pyrr.aabb.centre_point(box)).tolist() for box in boxes]
+    # create BB for ray interception
+    boxPR = pyrr.aabb.create_from_bounds(PRbounds[0], PRbounds[1])
+    m3count = np.full_like(m3s, 0, dtype=int)
+
+    outdir = os.path.join(resdir, 'm3s_%s_%s.npy' %(treename, str(voxel_size)))
+    outdir_count = os.path.join(resdir, 'm3count_%s_%s.npy' %(treename, str(voxel_size)))
+
+    if show:
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        for ss in np.unique(sensors, axis=0):
+            ax.scatter3D(*ss, color='r', s=20, marker='*')
+
+        positions = [(PRbounds[0][0], PRbounds[0][1], PRbounds[0][2])]
+        sizes = [(width, height, depth)]
+        pc = plotCubeAt2(positions,sizes,colors=[1,0,0,0.2], edgecolor="k")
+        ax.add_collection3d(pc)
+
+    else:
+        ax = None
+
+    for p1, p2 in tqdm(zip(points, sensors)):
+
+        line = pyrr.line.create_from_points(p1, p2, dtype=None)
+        ray = pyrr.ray.create_from_line(line)
+        res = pyrr.geometric_tests.ray_intersect_aabb(ray, boxPR)
+
+        if res is not None:
+
+            boxes = intercept(ray, boxPR, voxel_size)
+
+            try:
+                # get voxel grid IDX from AABB
+                idx = np.array(AABB2vgidx(boxes))
+                idx_s = [''.join([str(i[0]), str(i[1]), str(i[2])]) for i in idx]
+                # Does voxel where ray pass trhough is in a voxel occupied by point cloud?
+                inm3p = np.in1d(idx_s, voxp_idx_s)
+
+
+                inmin = np.zeros(len(inm3p), dtype=bool)
+                voxkeep = np.ones(len(inm3p), dtype=bool)
+
+                if inm3p.any() and np.sum(inm3p) < len(idx_s):
+                    
+                    # get the distances from all boxes to the source point (i.e. sensors)
+                    voxel_distance = np.array([np.linalg.norm(p2 - pyrr.aabb.centre_point(box).tolist()) for box in boxes])
+                    
+                    # Find distance to closest voxels with attribute 1
+                    dist_min = np.min(np.unique(voxel_distance[inm3p]))
+
+                    # keep voxels with distance greater than distance to closest voxel with attribute 1
+                    voxkeep = voxel_distance < dist_min
+
+                    # Find the attribute 1 voxel where the beam first intercept with.
+                    inmin = voxel_distance == dist_min
+                    
+                elif np.sum(inm3p) == len(idx_s):
+                    continue
+
+                if not voxkeep.any():
+                    continue
+
+
+                # 3D array with True where all rays pass trhough
+                m3s[idx[voxkeep].T[0], idx[voxkeep].T[1], idx[voxkeep].T[2]] = True
+                # m3s2[idx.T[0], idx.T[1], idx.T[2]] = True
+
+                # count incidences only for voxels with points
+                m3count[idx[inmin].T[0], idx[inmin].T[1], idx[inmin].T[2]] += 1
+
+            except Exception as e:
+                print(e)
+
+            if show:
+
+                for box, isinm3p, isinmin, isvoxkeep in zip(boxes, inm3p, inmin, voxkeep):
+
+                    minBB, maxBB = box
+                    minBB = np.array(minBB)
+                    maxBB = np.array(maxBB)
+                    width, height, depth = maxBB - minBB
+                    # plot bounding box
+                    positions = [(minBB[0], minBB[1], minBB[2])]
+                    sizes = [(width, height, depth)]
+
+                    if isinmin:
+                        pc = plotCubeAt2(positions,sizes,colors=[1,0,0,0.4], edgecolor="k")
+                    elif isinm3p and not isinmin:
+                        pc = plotCubeAt2(positions,sizes,colors=[0,0,1,0.4], edgecolor="k")
+                    elif isvoxkeep:
+                        pc = plotCubeAt2(positions,sizes,colors=[0,1,0,0.4], edgecolor="k")
+                    else:
+                        pc = plotCubeAt2(positions,sizes,colors=[1,0,1,0.4], edgecolor="k")
+                    ax.add_collection3d(pc)
+
+                ax.plot(*line.T.tolist())
+                ax.scatter3D(*p1, c='g', s=10)
+                ax.scatter3D(*res, c='k', s=10)
+
+        else:
+            print('Not in PR!!!!')
+    if show: 
+        plt.show()
+
+    print('tot vox: \t %i' %(totvox))
+    print('voxels hitted: \t %i' %(m3s.sum()))
+    print('Percentage of voxels hitted by beam: %.2f' %(m3s.sum()/totvox))
+
+    print('voxels hitted (OLD): \t %i' %(m3s2.sum()))
+    print('Percentage of voxels hitted by beam (OLD): %.2f' %(m3s2.sum()/totvox))
+
+    np.save(outdir, m3s)
+    np.save(outdir_count, m3count)
+
+    return m3s

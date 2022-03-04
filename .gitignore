@@ -6,6 +6,9 @@
 # Custom
 invoice/
 toremove/
+canopy_images/
+blensor_kiwitree_parameters/
+reports/
 .DS_Store
 pdal/
 data/
@@ -14,6 +17,13 @@ data/
 **.blend1
 **.mtl
 **_build/
+
+*.png
+**obj
+**ply
+booktest/*zip
+**.key
+
 
 # User-specific files
 *.rsuser

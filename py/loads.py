@@ -108,14 +108,22 @@ def npy2pandas(mockname, downsample=None):
 
     return scan
 
-def points2pcd(points):
+def points2pcd(points, colors=None):
     '''
     Numpy 3D-array to open3D PCD.
     '''
     
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points)
-    pcd.colors = o3d.utility.Vector3dVector(np.random.uniform(0, 1, size=np.asarray(pcd.points).shape))
+    if colors is not None:
+
+        if isinstance(colors, list):
+            color = np.full_like(points, colors)
+            pcd.colors = o3d.utility.Vector3dVector(color)
+        else:
+            pcd.colors = o3d.utility.Vector3dVector(colors)
+    else:
+        pcd.colors = o3d.utility.Vector3dVector(np.random.uniform(0, 1, size=np.asarray(pcd.points).shape))
     
     return pcd
 
@@ -166,8 +174,12 @@ def showPCDS(pointslist, colours):
     for num, points in enumerate(pointslist):
 
         pcd = points2pcd(points)
-        color = np.full_like(points, colours[num])
-        pcd.colors = o3d.utility.Vector3dVector(color)
+
+        if isinstance(colours[num], list):
+            color = np.full_like(points, colours[num])
+            pcd.colors = o3d.utility.Vector3dVector(color)
+        else:
+            pcd.colors = o3d.utility.Vector3dVector(colours[num])
 
         pcds.append(pcd)
 
@@ -215,9 +227,9 @@ def showbeams(df):
         ax.scatter3D(*p1, c='g', s=2)
         ax.scatter3D(*p2, c='r', s=5)
 
-def remove_outliers(a, b):
+def remove_outliers(a, b, nbins=100, bounds=(1, 99)):
 
-    bins = np.linspace(a.min(), a.max(), 400)
+    bins = np.linspace(a.min(), a.max(), nbins)
     keep = np.zeros(len(a), dtype=bool)
     res = []
 
@@ -225,7 +237,7 @@ def remove_outliers(a, b):
         
         mask = (a > bins[i]) & (a < bins[i+1])
         median = np.median(b[mask])
-        low, upp = np.percentile(b[mask], (1, 99))
+        low, upp = np.percentile(b[mask], bounds)
         mask &= (b > low) & (b < upp)
         res.append([(bins[i+1] + bins[i])/2, median, low, upp])
 
@@ -234,4 +246,5 @@ def remove_outliers(a, b):
         keep |= mask
 
     return res, keep
+
 

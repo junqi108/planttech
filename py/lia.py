@@ -168,7 +168,7 @@ def get_weigths(points, voxel_size=0.5):
 
 def leaf_angle(points, mockname, treename, voxel_size_w, kd3_sr, max_nn, save=False,
 savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1, ismock=True,
-ylim=None, ylimh=None):
+ylim=None, ylimh=None, savefig_extra=False):
     
     mockdir = os.path.join(_data, mockname)
     resdir = os.path.join(mockdir, 'lia')
@@ -204,6 +204,9 @@ ylim=None, ylimh=None):
     if savefig:
         _savefig = os.path.join(resdir, 'leaf_angle_dist_%s.png' %(treename))
         _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s.png' %(treename))
+    elif savefig_extra:
+        _savefig = os.path.join(resdir, 'leaf_angle_dist_%s_%.3f_%.3f_%i.png' %(treename, voxel_size_w, kd3_sr, max_nn))
+        _savefig_k = os.path.join(resdir, 'leaf_angle_dist_height_%s_%.3f_%.3f_%i.png' %(treename, voxel_size_w, kd3_sr, max_nn))
     else:
         _savefig = None
         _savefig_k = None
@@ -220,15 +223,49 @@ ylim=None, ylimh=None):
 
     voxk = get_voxk(points, voxel_size=voxel_size_h)
 
-    figures.angs_dist_k(voxk, voxk_mesh, thetaL, ta, ws=ws, savefig=_savefig_k, ylim=ylimh)
+    minpoint = points[:,2].min()
+    freq, kbin = figures.angs_dist_k(voxk, voxk_mesh, thetaL, ta, ws=ws, savefig=_savefig_k, ylim=ylimh, minpoint=minpoint, voxel_size_h=voxel_size_h)
+    
+    height_dist_dict = {'zmin':np.round(points[:,2].min() + (kbin[:-1] * voxel_size_h), 2), 
+                        'zmax':np.round(points[:,2].min() + (kbin[1:] * voxel_size_h), 2), 
+                        'freq':np.round(freq, 4)}
+    values_h = [points[:,2][np.logical_and(points[:,2] >= i, points[:,2] < j)] for i,j in zip(height_dist_dict['zmin'], height_dist_dict['zmax'])]
+    height_dist_dict['n'] = [len(i) for i in values_h]
+    # print(height_dist_dict['n'])
+    height_dist_dict['values'] = [np.random.choice(i, size=100) if len(i) >= 100 else i for i in values_h]
+    # values_randoms = []
+    # for i in values_h:
+    #     if len(i) <= 100: values_randoms.append(i)
+    #     elif len(i) > 0: values_randoms.append([0])
+    #     else: np.random.choice(i, size=100)
 
+    angs_dist_dict = {'angle_min':np.round(thetaLq[:-1], 1), 
+                      'angle_max':np.round(thetaLq[1:], 1), 
+                      'freq':np.round(h,4)}
+    values = [np.array(thetaL)[np.logical_and(thetaL >= i, thetaL < j)] for i,j in zip(angs_dist_dict['angle_min'], angs_dist_dict['angle_max'])]
+    angs_dist_dict['n'] = [len(i) for i in values]
+    angs_dist_dict['values'] = [np.random.choice(i, size=100) if len(i) >= 100 else i for i in values]
+
+    # print(pd.DataFrame.from_dict(height_dist_dict))
     # Save angles and weights
     if save:
         outdir_angs = os.path.join(resdir, 'angles_%s.npy' %(treename))
         np.save(outdir_angs, thetaL)
+
+        # save angle and weighted frequencies
+        outdir_angs_freq = os.path.join(resdir, 'angles_freq_%s.csv' %(treename))
+        pd.DataFrame.from_dict(angs_dist_dict).to_csv(outdir_angs_freq, index=False)
+
+        # save height and weighted frequencies
+        outdir_height_freq = os.path.join(resdir, 'height_freq_%s.csv' %(treename))
+        pd.DataFrame.from_dict(height_dist_dict).to_csv(outdir_height_freq, index=False)
+
         if weigths:
             outdir_ws = os.path.join(resdir, 'weights_%s.npy' %(treename))
             np.save(outdir_ws, ws)
+
+        # print('angles:', np.hist())
+        # print('weights:', len(ws))
 
     if ismock:
 

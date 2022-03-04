@@ -1,3 +1,4 @@
+from itertools import tee
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +11,7 @@ from time import process_time
 import figures
 import loads
 import lia
+import ray
 
 __author__ = 'Omar A. Ruiz Macias'
 __copyright__ = 'Copyright 2021, PLANTTECH'
@@ -90,10 +92,13 @@ def get_attributes(m3shape, m3p, m3b, show=False):
 
     return m3att
 
-def get_voxk(points, voxel_size=0.5):
+def get_voxk(points, PRbounds=None, voxel_size=0.5):
 
     pcd = loads.points2pcd(points)
-    voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    if PRbounds is None:
+        voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    else:
+        voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
     voxel = []
 
     # for each point, get the voxel index
@@ -104,14 +109,14 @@ def get_voxk(points, voxel_size=0.5):
 
     return voxel
 
-def get_voxk_mesh(meshfile, voxel_size=0.5):
+def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None):
 
     mesh = o3d.io.read_triangle_mesh(meshfile)
     vert = np.asarray(mesh.vertices)
     tri = np.asarray(mesh.triangles)
 
     # Get mesh by height from vertices points
-    voxk = get_voxk(vert, voxel_size=voxel_size)
+    voxk = get_voxk(vert, PRbounds=PRbounds, voxel_size=voxel_size)
 
     voxel = []
     # For each traingle, get its corresponfing voxel k (height)
@@ -158,11 +163,89 @@ def get_bia(points, sensors):
 
     return bia
 
-def compute_attributes(points, resdir, voxel_size, treename):
+def points_within_voxel_counts(points, voxel_size, PRbounds):
+
+    '''
+    Count the number of points within a voxel from a x,y,z point cloud.
+    The voxel grid dimmensions are given by voxel size and the Plant Region bounds.
+    Result is a 3D numpy array of voxel grid shape. Each entry in the array
+    contains the number of points within the voxel.
+    '''
+
+    pcd = loads.points2pcd(points)
+    # voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
+
+    m3s, _, _ = ray.get_matPR(vox=voxel_grid, voxel_size=voxel_size)
+
+    m3scount = np.full_like(m3s, 0, dtype=int)
+
+    # for each point, get the voxel index
+    for point in points:
+
+        i,j,k = voxel_grid.get_voxel(point)
+        m3scount[i][j][k] += 1
+
+    return m3scount
+
+def density_counts(points, voxel_size, PRbounds):
+
+    pcd = loads.points2pcd(points)
+    # voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
+    width, height, depth = voxel_grid.get_max_bound() - voxel_grid.get_min_bound()
+
+    m3s, voxs, _ = ray.get_matPR(vox=voxel_grid, voxel_size=voxel_size)
+    totvox = (~m3s).sum()
+
+    m3scount = np.full_like(m3s, 0, dtype=int)
+
+    # print('tot vox: \t %i' %(totvox))
+    # print('len points', len(points))
+
+    voxel = []
+
+    density_overall = len(points) / (width * height * depth)
+    # print('volume PR: %.4f' %(width * height * depth))
+    # print('volume voxel size: %.4f' %(voxel_size**3))
+    # print('PR dimensions: %.2f, %.2f, %.2f' %(width, height, depth))
+
+    # for each point, get the voxel index
+    for point in points:
+
+        i,j,k = voxel_grid.get_voxel(point)
+        m3scount[i][j][k] += 1
+        voxel.append('%s_%s_%s' %(i,j,k))
+
+    # get voxel list, indexes, and counts of points per voxel
+    vox, idx, idxinv, counts = np.unique(np.array(voxel), return_index=True, return_inverse=True, return_counts=True)
+    # print(len(counts), np.sum(counts > 1), np.sum(counts <= 1))
+    # counts = counts[counts > 1]
+    # Voxel volume
+    volume = voxel_size**3
+    # Point cloud volume density per voxel
+    density = counts/volume
+
+    # Get rid of outliers
+    dmin, dmax = np.percentile(density, (3,97))
+    # print('Counts',np.sum(counts))
+    keep = (density >= dmin) & (density <= dmax)
+    density = density[keep]
+
+    # print('Density overal= %.2f' %(density_overall))
+    # print('Mean density= %.2f' %(np.mean(density)))
+    # print('Mean density considering all voxels= %.2f' %(np.sum(density)/totvox))
+    # print('Median density= %.2f' %(np.median(density)))
+
+    # return density_overall, density, counts, vox, m3scount
+    return counts, vox, m3scount
+
+def compute_attributes(points, resdir, voxel_size, treename, PRbounds):
 
     # get points voxel bounding box
     pcd = loads.points2pcd(points)
-    voxp = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
+    # voxp = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
+    voxp = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
 
     # Create voxel of plant region
     width, height, depth = voxp.get_max_bound() - voxp.get_min_bound()
@@ -377,10 +460,11 @@ def alpha_k(bia, voxk, lias, ws, resdir, meshfile=None, figext=None, klia=False,
 
     return np.array(res)
 
-def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2, mean_weights):
+def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2, mean_weights, m3scount=None, usecounts=False, m3pcount=None):
     
     ki, kf = kcoord
     # print(kf-ki)
+    # print('************* m3scount', m3scount)
 
     if mean_weights is not None:
         betas = mean_weights
@@ -391,15 +475,56 @@ def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2, mean_weights):
         raise ValueError('k values cannot be greater than available. Maximum K value is: %i' %(m3att.shape[2]))
     
     m3 = m3att[:,:,ki:kf]
+
+    if m3scount is not None:
+        m3s = m3scount[:,:,ki:kf]
+
+    if m3pcount is not None:
+        m3p = m3pcount[:,:,ki:kf]
+
     DeltaH = (kf-ki) * voxel_size
     lai = []
     
     for i in range(kf-ki):
-        
-        nI = (m3[:,:,i] == 1).sum()
-        nP = (m3[:,:,i] == 2).sum()
-        n0 = (m3[:,:,i] == 3).sum()
-        _lai = nI/(nI+nP)
+
+        # print('i = ', i)
+
+        if usecounts:
+
+            nI = (m3s[:,:,i]).sum()
+            nP = (m3p[:,:,i]).sum()
+
+        else:
+
+            if m3scount is not None:
+
+                NI = (m3s[:,:,i]).sum()
+                nI0 = (m3[:,:,i] == 1).sum()
+                nI = nI0 * nI0 / NI
+
+                nP0 = (m3[:,:,i] == 2).sum()
+                nP = nP0 * nI0 / NI
+
+                # NP = (m3p[:,:,i]).sum()
+                # nP0 = (m3[:,:,i] == 2).sum()
+                # nP = nP0 * nP0 / NP
+
+                # print('*************** nI', nI)
+                # print('*************** NI', NI)
+                # print('*************** nI0', nI0)
+
+            else:
+
+                nI = (m3[:,:,i] == 1).sum()
+                nP = (m3[:,:,i] == 2).sum()
+
+            n0 = (m3[:,:,i] == 3).sum()
+
+        if (nI+nP) == 0:
+            _lai = 0
+        else:
+            _lai = nI/(nI+nP)
+
         # _lai = nI/(nI+nP+n0)
         alpha = alphas[i]
         beta = betas[i]
@@ -426,7 +551,7 @@ def get_lad_perk(kcoord, m3att, alphas, voxel_size, alpha2, mean_weights):
     return (ki+(kf-ki-1)/2)*voxel_size, LAD
     
 #
-def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2, mean_weights_k=None):
+def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2, mean_weights_k=None, m3scount=None, usecounts=False, m3pcount=None):
     
     kmax = m3att.shape[2]
     ar = np.arange(0, kmax, kbins)
@@ -447,28 +572,202 @@ def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2, mean_weights_k=None):
         else:
             mean_weights = None
         # print(i, alphas)
-        h, lad = get_lad_perk(i, m3att, alphas, voxel_size, alpha2, mean_weights)
+        h, lad = get_lad_perk(i, m3att, alphas, voxel_size, alpha2, mean_weights, m3scount, usecounts, m3pcount)
         lads.append([h, lad])
-        
+
     return np.array(lads)
 
-def get_LADS_mesh(meshfile, voxel_size, kbins, kmax):
+#
+def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir, oldlad=False):
+    
+    # kmax = m3shape[2]
+    ar = np.arange(0, kmax, kbins)
+    kcoords = []
+    lads = []
+    clai = []
+
+    ni_sum = 0
+    np_sum = 0
+
+    for i in range(len(ar)-1):
+        kcoords.append([ar[i],ar[1:][i]])
+
+    kcoords.append([ar[-1], kmax])
+
+    
+    for i in kcoords:
+        # print(kcoords)
+        ki, kf = i
+
+        if kf > kmax:
+            raise ValueError('k values cannot be greater than available. Maximum K value is: %i' %(kmax))
+
+        DeltaH = (kf-ki) * voxel_size
+        # print(DeltaH)
+        lai = []
+
+        for kval in range(ki, kf):
+
+            nI0, nI, nP0, nP = get_attributes_per_k(points, voxel_size, PRbounds, tree, kval, resdir)
+            print('======= K: %i =======' %(kval))
+            print('\t nI0: %.2f' %(nI0))
+            print('\t nI: %.2f' %(nI))
+            print('\t nP0: %.2f' %(nP0))
+            print('\t nP: %.2f' %(nP))
+
+            if (nI+nI0+nP+nP0) == 0:
+                _lai = 0
+            elif oldlad:
+                _lai = 0.4 * (nI+nI0+nP0)/(nI+nI0+nP+nP0)
+            else:
+                _lai = 0.5 * (nI+nI0)/((nI+nI0)+nP+nP0)
+
+            ni_sum += nI+nI0+nP0
+            np_sum += nP
+    
+            lai.append(alphas_k[kval] * _lai)
+            clai.append(alphas_k[kval] * _lai)
+
+        LAD = (1/DeltaH) * np.array(lai).sum()
+        h = (ki+(kf-ki-1)/2)*voxel_size
+
+        lads.append([h, LAD])
+
+        CLAI = np.array(clai).sum()
+
+    print('sums', ni_sum, np_sum)
+
+    return np.array(lads), CLAI
+
+def get_attributes_per_k(points, voxel_size, PRbounds, tree, kval, resdir, showall=False):
+
+    m3scount = points_within_voxel_counts(points, voxel_size, PRbounds)
+
+    # get the ray-beams counts computed in ray tracing
+    attributes2_counts_file = os.path.join(resdir, 'm3count_%s_%s.npy' %(tree, str(voxel_size)))
+    attributes2_file = os.path.join(resdir, 'm3s_%s_%s.npy' %(tree, str(voxel_size)))
+    if os.path.isfile(attributes2_counts_file):
+        m3b0 = np.load(attributes2_counts_file)
+    if os.path.isfile(attributes2_file):
+        m3b = np.load(attributes2_file)
+
+    # get indexes of voxels with at least 1 point and where beams have its first incidence
+    i,j,k = np.where(m3b0 != 0)
+    # get indexes of voxels with at least 1 point
+    _,_,kp = np.where(m3scount > 0)
+
+    if showall:
+        # number of points in voxels i,j,k
+        ni1 = m3scount[i,j,k]
+
+        # number of incidences between the ray beam and i,j,k voxels
+        np1 = m3b0[i,j,k]
+
+        # NI as the sum of the fraction number of points in voxels and the total number of incidences
+        NI = np.sum(ni1 / np1)
+        N0 = len(kp) - len(k)
+        NP0 = np.sum(1 - (ni1 / np1))
+
+        print('Number of voxels with points: %i' %(len(kp)))
+        print('-----------------')
+        print('New attribute 1:')
+        print('\t from fraction of incidences with attribute 1: %.2f' %(NI))
+        print('\t from normal counts of voxels with attribute 1: %.2f' %(N0))
+        print('New attribute 2')
+        print('\t from incidences with attribute 1: %.2f' %(NP0))
+        print('\t from normal counts of voxels with attribute 2: %.2f' %(m3b.sum()))
+
+
+    keep = k == kval
+    # number of points in voxels where beam first intercept a attribute 1 voxel
+    ni1 = m3scount[i[keep], j[keep], k[keep]]
+    # number of beam incidences with a first attribute 1 voxel
+    np1 = m3b0[i[keep], j[keep], k[keep]]
+
+    # number of voxels with attribute 1 in k-layer minus the number of voxels where beam
+    # first intercept a attribute 1 voxel
+    NI0 = np.abs(len(kp[kp == kval]) - len(k[keep]))
+    # NI0 = len(kp[kp == kval]) - len(k[keep])
+    # fraction of points and beam incidences in voxels where beam trajectory first hit an attribute 1 voxel
+    NI = np.sum(ni1 / np1)
+
+    NP0 = np.sum(1 - (ni1 / np1))
+    NP = m3b[:,:,kval].sum()
+
+    return NI0, NI, NP0, NP
+
+def get_lad_perk2(points, kcoord, kmax, alphas, voxel_size, PRbounds, tree):
+    
+    ki, kf = kcoord
+    
+    if kf > kmax:
+        raise ValueError('k values cannot be greater than available. Maximum K value is: %i' %(kmax))
+    
+    # m3 = m3att[:,:,ki:kf]
+
+    DeltaH = (kf-ki) * voxel_size
+    lai = []
+    
+    for i in range(kf-ki):
+
+        NI, NP0, NP = get_attributes_per_k(points, voxel_size, PRbounds, tree, kval=2)
+        # nI = (m3[:,:,i] == 1).sum()
+        # nP = (m3[:,:,i] == 2).sum()
+        # n0 = (m3[:,:,i] == 3).sum()
+
+        if (nI+nP) == 0:
+            _lai = 0
+        else:
+            _lai = nI/(nI+nP)
+
+        alpha = alphas[i]
+   
+        lai.append(alpha * _lai)
+
+    LAD = (1/DeltaH) * np.array(lai).sum()
+
+    return (ki+(kf-ki-1)/2)*voxel_size, LAD
+
+def get_clai(m3att, alphas_k):
+
+    ks = alphas_k[:,0]
+    alphas = alphas_k[:,6]
+    lai = []
+
+    for k, alpha in zip(ks, alphas):
+
+        nI = (m3att[:,:,int(k)] == 1).sum()
+        nP = (m3att[:,:,int(k)] == 2).sum()
+        n0 = (m3att[:,:,int(k)] == 3).sum()
+        _lai = nI/(nI+nP)
+
+        lai.append(alpha * _lai)
+
+    CLAI = np.array(lai).sum()
+
+    return CLAI
+        
+    
+
+def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds):
 
     mesh = o3d.io.read_triangle_mesh(meshfile)
 
     angles_mesh = lia.true_angles(meshfile)
     angles_mesh = np.array(lia.correct_angs(angles_mesh))
     # angles_mesh = np.array(angles_mesh)
-    voxk = np.array(get_voxk_mesh(meshfile, voxel_size=voxel_size))
+    voxk = np.array(get_voxk_mesh(meshfile, voxel_size=voxel_size, PRbounds=PRbounds))
     # get surface area
     sa = mesh.get_surface_area()
+    # print(voxel_size, sa)
     # Area per triangle
     area = np.full(len(voxk), np.round(sa/len(voxk), 6))
 
     # for volume
     vert = np.asarray(mesh.vertices)
     pcd = loads.points2pcd(vert)
-    voxel = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    # voxel = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+    voxel = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
     width, height, depth = voxel.get_max_bound() - voxel.get_min_bound()
 
     ar = np.arange(0, kmax, kbins)
@@ -482,11 +781,17 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax):
     # print(set(voxk))
     lads = []
 
+    asum = 0
+
     for i in kcoords:
+        # print(i)
 
         ki, kf = i
         
         keep = np.logical_and(voxk >= ki, voxk <= kf)
+
+        # to check that surface area per kbin adds up the total surface area
+        asum += area[keep].sum()
         
         # Area per leaf corrected by its angle with respect to the zenith
         Aleaf = area[keep]*np.cos(np.radians(angles_mesh[keep]))
@@ -506,6 +811,8 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax):
         lads.append([(i[0]+deltaH)*voxel_size, A/volume])
         # print(kf, ki)
         # print(len(i), i[0], deltaH, A/volume)
+
+    print(np.round(voxel_size,2), kbins, np.round(sa,2), np.round(asum,2))
 
     return np.array(lads)
 

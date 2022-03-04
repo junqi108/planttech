@@ -3,6 +3,7 @@ from matplotlib import cycler
 import numpy as np
 from scipy.stats import chisquare
 import os, glob
+import cv2
 
 import lad
 
@@ -24,7 +25,7 @@ plt.rc('xtick', direction='out', color='gray', labelsize=12)
 plt.rc('ytick', direction='out', color='gray', labelsize=12)
 plt.rc('patch', edgecolor='#E6E6E6')
 plt.rc('lines', linewidth=2)
-plt.rc('legend', fontsize=12)    # legend fontsize
+plt.rc('legend', fontsize=10)    # legend fontsize
 
 
 def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None, ylim=None):
@@ -40,6 +41,7 @@ def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None, ylim=Non
         weights = 1/ws
 
     x = plt.hist(angs, bins=bins, weights=weights, histtype='step', lw=3, color='g', density=True, label='Estimated')
+    # print('LIA', x)
     if true_angles is not None:
         x_truth = plt.hist(true_angles, bins=bins, histtype='step', lw=2,  ls='--', color='r', density=True, label='Truth')
         plt.legend()
@@ -79,12 +81,12 @@ def angs_dist(angs, true_angles=None, ws=None, savefig=None, text=None, ylim=Non
 
 
 
-def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None, ylim=None):
+def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None, ylim=None, minpoint=None, voxel_size_h=None):
 
     if true_angles is not None:
-        fig = plt.figure(figsize=(8,5*2))
+        fig = plt.figure(figsize=(8,6*3))
     else:
-        fig = plt.figure(figsize=(8,5*1))
+        fig = plt.figure(figsize=(8,6*2))
 
     angs = np.array(angs)
     if true_angles is not None:
@@ -96,15 +98,22 @@ def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None, ylim=
     else:
         bins_k = list(set(voxk))
     bins_ = np.linspace(0, len(bins_k), len(bins_k)+1)
+    # height = np.round(minpoint + (np.array(voxk) * voxel_size_h), 2)
+    # bins_ = np.linspace(minpoint, height.max(), len(bins_k)+1)
 
     if ws is None:
         weights = None
     else:
         weights = 1/ws
 
-    plt.subplot(2, 1, 1)
+    # distribution in function of k coordinate
+    plt.subplot(3, 1, 1)
     plt.title('Height Normalized')
-    plt.hist(voxk, bins=bins_, weights=weights, align='left', histtype='step', lw=3, color='g', density=True, label='Estimated')
+    # if minpoint is not None and voxel_size_h is not None:
+    #     X = plt.hist(height, bins=bins_, weights=weights, align='left', histtype='step', lw=3, color='g', density=True, label='Estimated')
+    # else:
+    X = plt.hist(voxk, bins=bins_, weights=weights, align='left', histtype='step', lw=3, color='g', density=True, label='Estimated')
+    
     if voxk_mesh is not None:
         plt.hist(voxk_mesh, bins=bins_, align='left', histtype='step', lw=2,  ls='--', color='r', density=True, label='Truth')
     plt.legend()
@@ -113,9 +122,17 @@ def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None, ylim=
     if ylim is not None:
         plt.ylim(0, ylim)
 
+     # distribution in function of z coordinate
+    plt.subplot(3, 1, 2)
+    plt.bar(np.round(minpoint + (np.array(X[1])[:-1] * voxel_size_h), 2), np.array(X[0]), width=voxel_size_h, color='b', alpha=0.5)
+    plt.ylabel(r'Frecuency')
+    plt.xlabel(r'Height z (m)')
+    if ylim is not None:
+        plt.ylim(0, ylim)
+
     if true_angles is not None:
 
-        plt.subplot(2, 1, 2)
+        plt.subplot(3, 1, 3)
 
         plt.axhline(0, ls='--', lw=2, color='k')
 
@@ -140,8 +157,12 @@ def angs_dist_k(voxk, voxk_mesh, angs, true_angles, ws=None, savefig=None, ylim=
         # 
         plt.ioff()
 
+    # print('RESULTS:', np.round(minpoint + (np.array(X[1])[:-1] * voxel_size_h), 2))
+
     if savefig is not None:
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
+
+    return np.array(X[0]), np.array(X[1])
 
 def G_alpha_plot(G_alpha_theta, savefig=None):
 
@@ -216,9 +237,10 @@ def show_beams(mockname, sample, tracers=False, res=1):
                 px, py, pz = pp.T[0], pp.T[1], pp.T[2]
                 ax.scatter3D(px, py, pz, c='k', s=1)
 
-def plot_lads(lads, savefig=None):
+def plot_lads(lads, text, savefig=None):
 
     fig = plt.figure(figsize=(4, 6))
+    ax = fig.add_subplot(111)
 
     for key, val in lads.items():
 
@@ -227,10 +249,53 @@ def plot_lads(lads, savefig=None):
         else:
             plt.plot(val[0:,1], val[0:,0], marker='*', label=key)
 
+    props = dict(boxstyle='round', facecolor='blue', alpha=0.3)
+
+    # place a text box in upper left in axes coords
+    plt.text(0.9, 0.9, text, fontsize=8, ha='center', va='center', transform=ax.transAxes, bbox=props)
+
     plt.xlabel(r'LAD ($m^2/m^3$)')
     plt.ylabel(r'Height ($m$)')
-    plt.legend()
-    plt.xlim(0, 2.7)
+    plt.legend(loc='lower right')
+    # plt.xlim(0, 2.7)
 
     if savefig is not None:
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
+
+
+maxc = list()
+
+def centroid_histogram(clt) :
+
+    clusters = np.arange(0, len(np.unique(clt.labels_)) + 1)
+    (hist, _) = np.histogram(clt.labels_, bins = clusters)
+
+    hist = hist.astype("float")
+    hist /= hist.sum()
+
+    return hist
+
+def plot_colors(hist, centroids) :
+
+    bar = np.zeros((50,300, 3), dtype = "uint8")
+    startx = 0
+
+    for (percent, color) in zip(hist, centroids) :
+            print(percent)
+            maxc.append(percent)
+            endx = startx + (percent * 300)
+            cv2.rectangle(bar, (int(startx), 0), (int(endx), 50), color.astype("uint8").tolist(), -1)
+            startx = endx
+
+    plot_max()
+
+    return bar
+
+def plot_max() :
+
+    maxbar = np.zeros((50,50,3), dtype = "uint8")
+
+    x = np.amax(maxc)
+    cv2.rectangle(maxbar, (0,0), (50,50), x, -1)
+
+    return maxbar
