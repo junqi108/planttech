@@ -245,6 +245,12 @@ ylim=None, ylimh=None, savefig_extra=False):
     values = [np.array(thetaL)[np.logical_and(thetaL >= i, thetaL < j)] for i,j in zip(angs_dist_dict['angle_min'], angs_dist_dict['angle_max'])]
     angs_dist_dict['n'] = [len(i) for i in values]
     angs_dist_dict['values'] = [np.random.choice(i, size=100) if len(i) >= 100 else i for i in values]
+    
+    # 
+    results_per_height = {}
+    results_per_height['zmin'] = height_dist_dict['zmin']
+    values = [np.array(thetaL)[np.logical_and(points[:,2] >= i, points[:,2] < j)] for i,j in zip(height_dist_dict['zmin'], height_dist_dict['zmax'])]
+    results_per_height['values'] = [np.random.choice(i, size=100) if len(i) >= 100 else i for i in values]
 
     # print(pd.DataFrame.from_dict(height_dist_dict))
     # Save angles and weights
@@ -259,6 +265,10 @@ ylim=None, ylimh=None, savefig_extra=False):
         # save height and weighted frequencies
         outdir_height_freq = os.path.join(resdir, 'height_freq_%s.csv' %(treename))
         pd.DataFrame.from_dict(height_dist_dict).to_csv(outdir_height_freq, index=False)
+        
+        # save angles and LAD per height
+        outdir_res_height = os.path.join(resdir, 'results_per_height_%s.csv' %(treename))
+        pd.DataFrame.from_dict(results_per_height).to_csv(outdir_res_height, index=False)
 
         if weigths:
             outdir_ws = os.path.join(resdir, 'weights_%s.npy' %(treename))

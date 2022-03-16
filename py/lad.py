@@ -664,9 +664,9 @@ def get_attributes_per_k(points, voxel_size, PRbounds, tree, kval, resdir, showa
         np1 = m3b0[i,j,k]
 
         # NI as the sum of the fraction number of points in voxels and the total number of incidences
-        NI = np.sum(ni1 / np1)
+        NI = np.sum(ni1 / (np1 + ni1))
         N0 = len(kp) - len(k)
-        NP0 = np.sum(1 - (ni1 / np1))
+        NP0 = np.sum(1 - (ni1 / (np1 + ni1)))
 
         print('Number of voxels with points: %i' %(len(kp)))
         print('-----------------')

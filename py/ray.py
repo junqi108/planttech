@@ -716,7 +716,7 @@ def main2(points, sensors, pointsPR, voxel_size, resdir, treename, PRbounds, sho
                 if not voxkeep.any():
                     continue
 
-
+                # Counts
                 # 3D array with True where all rays pass trhough
                 m3s[idx[voxkeep].T[0], idx[voxkeep].T[1], idx[voxkeep].T[2]] = True
                 # m3s2[idx.T[0], idx.T[1], idx.T[2]] = True
@@ -727,6 +727,7 @@ def main2(points, sensors, pointsPR, voxel_size, resdir, treename, PRbounds, sho
             except Exception as e:
                 print(e)
 
+            # For plot only
             if show:
 
                 for box, isinm3p, isinmin, isvoxkeep in zip(boxes, inm3p, inmin, voxkeep):

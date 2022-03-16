@@ -246,4 +246,4 @@ dependencies:
     - webencodings==0.5.1
     - websocket-client==1.2.1
     - widgetsnbextension==3.5.1
-prefix: /Users/omar/opt/miniconda3/envs/plant-env
+prefix: /Users/tardis/opt/anaconda3/envs/plant-env

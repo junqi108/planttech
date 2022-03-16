@@ -28,10 +28,41 @@ and to create the environment use:
 conda env create -f path/to/environment.yml
 ```
 
+Remember to change the last line if needed with the correct path of your anaconda/miniconda distro:
+```
+prefix: /Users/tardis/opt/anaconda3/envs/plant-env
+```
+
+```{note}
 If getting the issue `ResolvePackageNotFound` just move these packages under 'pip'.
 
 Install `laspy` with
 
+> conda install -c conda-forge laspy
 ```
-conda install -c conda-forge laspy
+
+```{note}
+
+If getting issue `No LazBackend selected, cannot decompress data` simply install:
+
+> pip install laszip
+```
+
+## create kernel for env
+
+Before login to our new conda env `plant-env`, we download the `ipykernel` repo,
+```
+pip install ipykernel
+```
+
+then, we create a kernel with based on the `plant-env` env,
+
+```
+python -m ipykernel install --user --name=plant-env 
+```
+
+Finally, we make sure it was created with:
+
+```
+jupyter kernelspec list 
 ```
