@@ -130,17 +130,6 @@ def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None):
 
     return voxel
 
-def downsample_lia(mockname, treename, inds):
-
-    # Check if angles and weights are available
-    outdir_angs = os.path.join(_data, mockname, 'lia', 'angles_%s.npy' %(treename))
-    outdir_ws = os.path.join(_data, mockname, 'lia', 'weights_%s.npy' %(treename))
-
-    lia = np.load(outdir_angs)
-    ws = np.load(outdir_ws)
-
-    return lia[inds], ws[inds]
-
 def vecttoangle(v1, v2):
     
     unit_vector_1 = v1 / np.linalg.norm(v1)
@@ -620,6 +609,7 @@ def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir,
             elif oldlad:
                 _lai = 0.4 * (nI+nI0+nP0)/(nI+nI0+nP+nP0)
             else:
+                print('------- LAD with factor of 2 -------')
                 _lai = 0.5 * (nI+nI0)/((nI+nI0)+nP+nP0)
 
             ni_sum += nI+nI0+nP0
@@ -635,7 +625,7 @@ def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir,
 
         CLAI = np.array(clai).sum()
 
-    print('sums', ni_sum, np_sum)
+    # print('sums', ni_sum, np_sum)
 
     return np.array(lads), CLAI
 
@@ -689,9 +679,9 @@ def get_attributes_per_k(points, voxel_size, PRbounds, tree, kval, resdir, showa
     NI0 = np.abs(len(kp[kp == kval]) - len(k[keep]))
     # NI0 = len(kp[kp == kval]) - len(k[keep])
     # fraction of points and beam incidences in voxels where beam trajectory first hit an attribute 1 voxel
-    NI = np.sum(ni1 / np1)
+    NI = np.sum(ni1 / (np1 + ni1))
 
-    NP0 = np.sum(1 - (ni1 / np1))
+    NP0 = np.sum(1 - (ni1 / (np1 + ni1)))
     NP = m3b[:,:,kval].sum()
 
     return NI0, NI, NP0, NP

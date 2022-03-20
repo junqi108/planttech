@@ -247,4 +247,15 @@ def remove_outliers(a, b, nbins=100, bounds=(1, 99)):
 
     return res, keep
 
+def load_lias_ws(mockname, treename):
+
+    # Check if angles and weights are available
+    outdir_angs = os.path.join(_data, mockname, 'lia', 'angles_%s.npy' %(treename))
+    outdir_ws = os.path.join(_data, mockname, 'lia', 'weights_%s.npy' %(treename))
+
+    lia = np.load(outdir_angs)
+    ws = np.load(outdir_ws)
+
+    return lia, ws
+
 
