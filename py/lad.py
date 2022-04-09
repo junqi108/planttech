@@ -105,6 +105,8 @@ def get_voxk(points, PRbounds=None, voxel_size=0.5):
     for point in points:
 
         i,j,k = voxel_grid.get_voxel(point)
+        # print('+++++++')
+        # print(point, '-->', i,j,k)
         voxel.append(k)
 
     return voxel
@@ -113,10 +115,19 @@ def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None):
 
     mesh = o3d.io.read_triangle_mesh(meshfile)
     vert = np.asarray(mesh.vertices)
+    # vertices are ordered as [x, z, y]
+    # Next line fix it to be [x, y, z]
+    vert[:, [1, 2]] = vert[:, [2, 1]]
     tri = np.asarray(mesh.triangles)
 
     # Get mesh by height from vertices points
     voxk = get_voxk(vert, PRbounds=PRbounds, voxel_size=voxel_size)
+    isnegative = np.where(np.array(voxk) == -1)[0]
+    print('isnegative', isnegative)
+    # print('=======')
+    # print(len(vert), vert)
+    # print(len(voxk), voxk)
+
 
     voxel = []
     # For each traingle, get its corresponfing voxel k (height)
@@ -124,8 +135,13 @@ def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None):
     # and keep the most frequent K
     for i in tri:
         
-        a = [voxk[i[0]], voxk[i[1]], voxk[i[2]]]
-        counts = np.bincount(np.array(a))
+        a = np.array([voxk[i[0]], voxk[i[1]], voxk[i[2]]])
+        # bincount does not accept negative values and somehow we get some voxk = -1 which has no sense
+        # This may be because some vertices of the triangular mesh lies outside the PRbounds
+        # To fix it, I included an IF to get rid of everythin < 0 in the triangle voxk equivalence.
+        if np.any(a < 0):
+            a = a[a >= 0]
+        counts = np.bincount(a)
         voxel.append(np.argmax(counts))
 
     return voxel
@@ -567,7 +583,7 @@ def get_LADS(m3att, voxel_size, kbins, alphas_k, alpha2, mean_weights_k=None, m3
     return np.array(lads)
 
 #
-def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir, oldlad=False):
+def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir, oldlad=False, C=0.5):
     
     # kmax = m3shape[2]
     ar = np.arange(0, kmax, kbins)
@@ -583,6 +599,8 @@ def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir,
 
     kcoords.append([ar[-1], kmax])
 
+    m3scount = points_within_voxel_counts(points, voxel_size, PRbounds)
+
     
     for i in kcoords:
         # print(kcoords)
@@ -597,20 +615,22 @@ def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir,
 
         for kval in range(ki, kf):
 
-            nI0, nI, nP0, nP = get_attributes_per_k(points, voxel_size, PRbounds, tree, kval, resdir)
-            print('======= K: %i =======' %(kval))
-            print('\t nI0: %.2f' %(nI0))
-            print('\t nI: %.2f' %(nI))
-            print('\t nP0: %.2f' %(nP0))
-            print('\t nP: %.2f' %(nP))
+            nI0, nI, nP0, nP = get_attributes_per_k(m3scount, voxel_size, PRbounds, tree, kval, resdir)
+
+            if True:
+                print('======= K: %i =======' %(kval))
+                # print('\t nI0: %.2f' %(nI0))
+                # print('\t nI: %.2f' %(nI))
+                # print('\t nP0: %.2f' %(nP0))
+                # print('\t nP: %.2f' %(nP))
 
             if (nI+nI0+nP+nP0) == 0:
                 _lai = 0
             elif oldlad:
                 _lai = 0.4 * (nI+nI0+nP0)/(nI+nI0+nP+nP0)
             else:
-                print('------- LAD with factor of 2 -------')
-                _lai = 0.5 * (nI+nI0)/((nI+nI0)+nP+nP0)
+                # print('------- LAD with factor of 2 -------')
+                _lai = C * (nI+nI0)/((nI+nI0)+nP+nP0)
 
             ni_sum += nI+nI0+nP0
             np_sum += nP
@@ -629,9 +649,7 @@ def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir,
 
     return np.array(lads), CLAI
 
-def get_attributes_per_k(points, voxel_size, PRbounds, tree, kval, resdir, showall=False):
-
-    m3scount = points_within_voxel_counts(points, voxel_size, PRbounds)
+def get_attributes_per_k(m3scount, voxel_size, PRbounds, tree, kval, resdir, showall=False):
 
     # get the ray-beams counts computed in ray tracing
     attributes2_counts_file = os.path.join(resdir, 'm3count_%s_%s.npy' %(tree, str(voxel_size)))

@@ -48,7 +48,7 @@ def vecttoangle(v1, v2):
     
     return np.rad2deg(angle)
 
-def mesh_leaf_area(meshfile):
+def mesh_leaf_area(meshfile, Nleaves):
     '''
     Get the leaf area from mesh file.
     '''
@@ -57,12 +57,15 @@ def mesh_leaf_area(meshfile):
     mesh = o3d.io.read_triangle_mesh(meshfile)
     cidx, nt, area = mesh.cluster_connected_triangles()
 
+    if Nleaves is None:
+        Nleaves = 4
+
     # Hexagonal leaves from blensor have 4 trinagles in mesh
-    keep = (np.array(nt) == 4)
+    keep = (np.array(nt) == Nleaves)
     if keep.sum() != 0:
         la = np.array(area)[keep][0]
     else:
-        raise ValueError('Mesh does not find clusters leaves with 4 triangles.')
+        raise ValueError('Mesh does not find clusters leaves with %i triangles.' %(Nleaves))
 
     return np.round(la, 6)
 
@@ -286,7 +289,7 @@ ylim=None, ylimh=None, savefig_extra=False):
 
         return chi2
 
-def bestfit_pars_la(points, mockname, treename, weigths=True, ismock=True):
+def bestfit_pars_la(points, mockname, Nleaves, treename, weigths=True, ismock=True):
     '''
     Find the best fit parameters comparing chi2 of estimated LIA with Truth.
     '''
@@ -312,7 +315,7 @@ def bestfit_pars_la(points, mockname, treename, weigths=True, ismock=True):
 
     if ismock:
         if os.path.isfile(meshfile):
-            la = mesh_leaf_area(meshfile)
+            la = mesh_leaf_area(meshfile, Nleaves)
         else:
             raise ValueError('No mesh.ply file in %s' %(mockdir))
     else:
