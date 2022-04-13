@@ -115,18 +115,18 @@ def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None):
 
     mesh = o3d.io.read_triangle_mesh(meshfile)
     vert = np.asarray(mesh.vertices)
-    # vertices are ordered as [x, z, y]
+    # If vertices are ordered as [x, z, y]
     # Next line fix it to be [x, y, z]
-    vert[:, [1, 2]] = vert[:, [2, 1]]
+    # vert[:, [1, 2]] = vert[:, [2, 1]]
     tri = np.asarray(mesh.triangles)
 
     # Get mesh by height from vertices points
     voxk = get_voxk(vert, PRbounds=PRbounds, voxel_size=voxel_size)
     isnegative = np.where(np.array(voxk) == -1)[0]
     print('isnegative', isnegative)
-    # print('=======')
-    # print(len(vert), vert)
-    # print(len(voxk), voxk)
+    print('=======')
+    print(len(vert), vert)
+    print(len(voxk), voxk)
 
 
     voxel = []
@@ -619,15 +619,15 @@ def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir,
 
             if True:
                 print('======= K: %i =======' %(kval))
-                # print('\t nI0: %.2f' %(nI0))
-                # print('\t nI: %.2f' %(nI))
-                # print('\t nP0: %.2f' %(nP0))
-                # print('\t nP: %.2f' %(nP))
+                print('\t nI0: %.2f' %(nI0))
+                print('\t nI: %.2f' %(nI))
+                print('\t nP0: %.2f' %(nP0))
+                print('\t nP: %.2f' %(nP))
 
             if (nI+nI0+nP+nP0) == 0:
                 _lai = 0
             elif oldlad:
-                _lai = 0.4 * (nI+nI0+nP0)/(nI+nI0+nP+nP0)
+                _lai = 1.0 * (nI+nI0+nP0)/(nI+nI0+nP+nP0)
             else:
                 # print('------- LAD with factor of 2 -------')
                 _lai = C * (nI+nI0)/((nI+nI0)+nP+nP0)
@@ -770,6 +770,11 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds):
     # print(voxel_size, sa)
     # Area per triangle
     area = np.full(len(voxk), np.round(sa/len(voxk), 6))
+
+    print('======')
+    print('surface area', sa)
+    print('number of trinagles', len(voxk))
+    print('Area per triangle', area)
 
     # for volume
     vert = np.asarray(mesh.vertices)
