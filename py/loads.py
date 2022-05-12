@@ -68,6 +68,8 @@ def npy2pandas(mockname, downsample=None):
     # read the numpy files
     files = {}
     bia_pos = {}
+    N = len(glob.glob(os.path.join(datapath, 's*.npy')))
+    print('Number of files: %i' %(N))
     for file in glob.glob(os.path.join(datapath, 's*.npy')):
         df = np.load(file)
         filename = file.split('/')[-1]
@@ -92,6 +94,11 @@ def npy2pandas(mockname, downsample=None):
             print('file %s empty' %(filename))
 
     # concatenate all data
+    # if len(list(files.keys())) < 2:
+        # print(list(files.values()))
+    #     df = list(files.values())[0]
+    #     bias = list(bia_pos.values())[0]
+    # else:
     df = np.concatenate(list(files.values()))
     bias = np.concatenate(list(bia_pos.values()))
 
@@ -246,5 +253,16 @@ def remove_outliers(a, b, nbins=100, bounds=(1, 99)):
         keep |= mask
 
     return res, keep
+
+def load_lias_ws(mockname, treename):
+
+    # Check if angles and weights are available
+    outdir_angs = os.path.join(_data, mockname, 'lia', 'angles_%s.npy' %(treename))
+    outdir_ws = os.path.join(_data, mockname, 'lia', 'weights_%s.npy' %(treename))
+
+    lia = np.load(outdir_angs)
+    ws = np.load(outdir_ws)
+
+    return lia, ws
 
 
