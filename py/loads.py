@@ -10,6 +10,7 @@ from time import process_time
 from scipy import interpolate
 import pyrr 
 from mpl_toolkits.mplot3d import Axes3D
+from plyfile import PlyData, PlyElement
 
 __author__ = 'Omar A. Ruiz Macias'
 __copyright__ = 'Copyright 2021, PLANTTECH'
@@ -45,6 +46,36 @@ def numpy2npy(mockname, downsample=None):
             np.save(outfile, df[keep])
         else:
             np.save(outfile, df)
+
+def ply2npy(mockname, downsample=None):
+    '''
+    Convert GroIMP ply output files into real npy
+    '''
+           
+    datapath = os.path.join(_data, mockname)
+
+    # read the numpy files
+    for file in glob.glob(os.path.join(datapath, '*.ply')):
+        df1 = PlyData.read(file)
+        df = np.transpose([df1.elements[0].data['x'],
+                            df1.elements[0].data['y'],
+                            df1.elements[0].data['z']])
+        
+        #df = np.loadtxt(file)
+        filename = file.split('/')[-1].split('.')[0]
+
+        print('%s done --> Number of beams: %i' %(file.split('/')[-1], len(df)))
+        outfile = os.path.join(_data, mockname, filename)
+
+        if downsample is not None:
+            keep = np.random.randint(0, len(df), int(len(df) * downsample))
+            # print(filename, len(df), len(df[keep]))
+            np.save(outfile, df[keep])
+        else:
+            np.save(outfile, df)
+
+
+
 
 def load_scan_pos(filename):
     '''
@@ -115,6 +146,73 @@ def npy2pandas(mockname, downsample=None):
 
     return scan
 
+def plynpy2pandas(mockname, downsample=None):
+    '''
+    Read the npy files and merge in a pandas dataframe.
+    This function also adds the information of the sensor
+    coordinates called the bia (beam inclination angle) positions.
+    '''
+
+    datapath = os.path.join(_data, mockname)
+
+    # read the numpy files
+    files = {}
+    bia_pos = {}
+    N = len(glob.glob(os.path.join(datapath, '*.npy')))
+    print('Number of files: %i' %(N))
+    for file in glob.glob(os.path.join(datapath, '*.npy')):
+        df = np.load(file, allow_pickle=True)
+        filename = file.split('/')[-1]
+
+        if downsample is not None:
+            keep = np.random.randint(0, len(df), int(len(df) * downsample))
+            df = df[keep]
+
+        # sensor coordinates
+        spos = os.path.join(datapath, 'scanner_pos.txt')
+        scan = load_scan_pos(spos)
+        #id = [i.decode("utf-8") for i in scan['scan']]
+        
+        _, sx, sy, sz = scan[0]
+
+        if df.shape[0] > 0:
+            files[filename] = df
+            bia = np.full((len(df),3), np.array([sx, sy, sz]))
+            bia_pos[filename] = bia
+            # print(filename, df.shape, bia.shape)
+        else:
+            print('file %s empty' %(filename))
+
+    # concatenate all data
+    # if len(list(files.keys())) < 2:
+        # print(list(files.values()))
+    #     df = list(files.values())[0]
+    #     bias = list(bia_pos.values())[0]
+    # else:
+    df = np.concatenate(list(files.values()))
+    bias = np.concatenate(list(bia_pos.values()))
+
+    df2 = pd.DataFrame(df, columns=[ 'x','y','z'])
+    new_index = ['timestamp',
+    'yaw', 'pitch', 'distance','distance_noise',
+    'x','y','z','x_noise','y_noise','z_noise',
+    'object_id', 'color0', 'color1','color2', 'idx']
+    scan = df2.reindex(columns= new_index, fill_value=0)
+
+    # pass this to a pandas data frame for simplicity
+   # scan = pd.DataFrame(df, columns=['timestamp', 'yaw', 'pitch', 'distance','distance_noise',
+   #                                 'x','y','z',
+   #                                 'x_noise','y_noise','z_noise',
+   #                                 'object_id', 'color0', 'color1','color2', 'idx'])
+
+    bia = pd.DataFrame(bias, columns=['sx', 'sy', 'sz'])
+
+    # concat
+    scan = pd.concat((scan, bia), axis=1)
+
+    return scan
+
+
 def points2pcd(points, colors=None):
     '''
     Numpy 3D-array to open3D PCD.
@@ -159,6 +257,16 @@ def extract_leaves(df, show=False):
 
     return leaves
 
+def extract_leaves_2(df, show=False):
+    '''
+    Extract leaves from dataframe.
+    '''
+
+    leaves = np.ones(len(df['x']), dtype=bool)
+    if show:
+        showPCfromDF(df[leaves])
+
+    return leaves
 
 def loadlaz(name):
 

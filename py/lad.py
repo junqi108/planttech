@@ -653,13 +653,16 @@ def get_attributes_per_k(m3scount, voxel_size, PRbounds, tree, kval, resdir, sho
 
     # get the ray-beams counts computed in ray tracing
     attributes2_counts_file = os.path.join(resdir, 'm3count_%s_%s.npy' %(tree, str(voxel_size)))
+    print(attributes2_counts_file)
     attributes2_file = os.path.join(resdir, 'm3s_%s_%s.npy' %(tree, str(voxel_size)))
     if os.path.isfile(attributes2_counts_file):
         m3b0 = np.load(attributes2_counts_file)
+
     if os.path.isfile(attributes2_file):
         m3b = np.load(attributes2_file)
 
     # get indexes of voxels with at least 1 point and where beams have its first incidence
+    print(m3b0)
     i,j,k = np.where(m3b0 != 0)
     # get indexes of voxels with at least 1 point
     _,_,kp = np.where(m3scount > 0)
