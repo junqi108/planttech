@@ -111,26 +111,32 @@ def get_voxk(points, PRbounds=None, voxel_size=0.5):
 
     return voxel
 
-def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None):
+def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None, inverted=False):
 
     mesh = o3d.io.read_triangle_mesh(meshfile)
     vert = np.asarray(mesh.vertices)
-    # If vertices are ordered as [x, z, y]
-    # Next line fix it to be [x, y, z]
-    # vert[:, [1, 2]] = vert[:, [2, 1]]
+
+    # --------------------------------------------
+    # --- If vertices are ordered as [x, z, y] ---
+    # --- Next line fix it to be [x, y, z]     ---
+    # --------------------------------------------
+    if inverted:
+        print('==== Inverted vertices =====')
+        vert[:, [1, 2]] = vert[:, [2, 1]]
+    
     tri = np.asarray(mesh.triangles)
 
     # Get mesh by height from vertices points
     voxk = get_voxk(vert, PRbounds=PRbounds, voxel_size=voxel_size)
     isnegative = np.where(np.array(voxk) == -1)[0]
-    print('isnegative', isnegative)
-    print('=======')
-    print(len(vert), vert)
-    print(len(voxk), voxk)
+    # print('isnegative', isnegative)
+    # print('=======')
+    # print(len(vert), vert)
+    # print(len(voxk), voxk)
 
 
     voxel = []
-    # For each traingle, get its corresponfing voxel k (height)
+    # For each traingle, get its corresponding voxel k (height)
     # one for each of the three vertices that form the triangle
     # and keep the most frequent K
     for i in tri:
@@ -142,6 +148,9 @@ def get_voxk_mesh(meshfile, voxel_size=0.5, PRbounds=None):
         if np.any(a < 0):
             a = a[a >= 0]
         counts = np.bincount(a)
+        # if len(counts) == 0:
+            # print('------->',i, a, counts)
+            # continue
         voxel.append(np.argmax(counts))
 
     return voxel
@@ -610,26 +619,29 @@ def get_LADS2(points, kmax, voxel_size, kbins, alphas_k, PRbounds, tree, resdir,
             raise ValueError('k values cannot be greater than available. Maximum K value is: %i' %(kmax))
 
         DeltaH = (kf-ki) * voxel_size
-        # print(DeltaH)
+        # print('------ DeltaH',DeltaH)
         lai = []
 
         for kval in range(ki, kf):
 
             nI0, nI, nP0, nP = get_attributes_per_k(m3scount, voxel_size, PRbounds, tree, kval, resdir)
 
-            if True:
-                print('======= K: %i =======' %(kval))
-                print('\t nI0: %.2f' %(nI0))
-                print('\t nI: %.2f' %(nI))
-                print('\t nP0: %.2f' %(nP0))
-                print('\t nP: %.2f' %(nP))
+            # if True:
+                # print('======= K: %i =======' %(kval))
+
+                # print('\t nI0: %.2f' %(nI0))
+                # print('\t nI: %.2f' %(nI))
+                # print('\t nP0: %.2f' %(nP0))
+                # print('\t nP: %.2f' %(nP))
+
+                # print('\t nI: %.2f' %(nI+nI0+nP0))
+                # print('\t nP: %.2f' %(nP))
 
             if (nI+nI0+nP+nP0) == 0:
                 _lai = 0
             elif oldlad:
                 _lai = 1.0 * (nI+nI0+nP0)/(nI+nI0+nP+nP0)
             else:
-                # print('------- LAD with factor of 2 -------')
                 _lai = C * (nI+nI0)/((nI+nI0)+nP+nP0)
 
             ni_sum += nI+nI0+nP0
@@ -757,14 +769,14 @@ def get_clai(m3att, alphas_k):
         
     
 
-def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds):
+def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds, inverted=False):
 
     mesh = o3d.io.read_triangle_mesh(meshfile)
 
-    angles_mesh = lia.true_angles(meshfile)
+    angles_mesh = lia.true_angles(meshfile, inverted=inverted)
     angles_mesh = np.array(lia.correct_angs(angles_mesh))
     # angles_mesh = np.array(angles_mesh)
-    voxk = np.array(get_voxk_mesh(meshfile, voxel_size=voxel_size, PRbounds=PRbounds))
+    voxk = np.array(get_voxk_mesh(meshfile, voxel_size=voxel_size, PRbounds=PRbounds, inverted=inverted))
     # get surface area
     sa = mesh.get_surface_area()
     # print(voxel_size, sa)
@@ -774,14 +786,20 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds):
     print('======')
     print('surface area', sa)
     print('number of trinagles', len(voxk))
-    print('Area per triangle', area)
+    print('Area per triangle', set(area))
+    print('angles mesh', set(angles_mesh))
 
     # for volume
     vert = np.asarray(mesh.vertices)
+    print('Number of vertices', len(vert))
     pcd = loads.points2pcd(vert)
     # voxel = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
     voxel = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
     width, height, depth = voxel.get_max_bound() - voxel.get_min_bound()
+
+    volume = width * height * kbins * voxel_size
+    print(' ---------- width, height, kbins * voxel_size',width, height, kbins * voxel_size)
+    print('------- volume', volume)
 
     ar = np.arange(0, kmax, kbins)
     kcoords = []
@@ -795,6 +813,7 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds):
     lads = []
 
     asum = 0
+    asum_corrected = 0
 
     for i in kcoords:
         # print(i)
@@ -815,17 +834,25 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds):
         # Aleaf = area[keep]
         # Total area in bin
         A = Aleaf.sum()
+        asum_corrected += A
         # get volume
         volume = width * height * kbins * voxel_size
-        # print(volume)
 
         #save lad
         deltaH = (kf - ki)/2
         lads.append([(i[0]+deltaH)*voxel_size, A/volume])
         # print(kf, ki)
         # print(len(i), i[0], deltaH, A/volume)
+        print('======== kbin:', i, '========')
+        # print('Area leaf:', Aleaf)
+        print('number of triangles per bin', np.sum(keep))
+        print('total surface area per kbin', area[keep].sum())
+        print('Area per kbin corrected:', A)
+        print('labda:', set(angles_mesh[keep]))
 
     print(np.round(voxel_size,2), kbins, np.round(sa,2), np.round(asum,2))
+    print('------ A sum corrected', asum_corrected)
+    # print(np.array(lads))
 
     return np.array(lads)
 

@@ -237,7 +237,7 @@ def show_beams(mockname, sample, tracers=False, res=1):
                 px, py, pz = pp.T[0], pp.T[1], pp.T[2]
                 ax.scatter3D(px, py, pz, c='k', s=1)
 
-def plot_lads(lads, text, savefig=None):
+def plot_lads(lads, text, savefig=None, legend=True):
 
     fig = plt.figure(figsize=(4, 6))
     ax = fig.add_subplot(111)
@@ -256,8 +256,8 @@ def plot_lads(lads, text, savefig=None):
 
     plt.xlabel(r'LAD ($m^2/m^3$)')
     plt.ylabel(r'Height ($m$)')
-    plt.legend(loc='lower right')
-    # plt.xlim(0, 2.7)
+    if legend:
+        plt.legend(loc='lower right')
 
     if savefig is not None:
         plt.savefig(savefig, dpi=200, bbox_inches='tight')
