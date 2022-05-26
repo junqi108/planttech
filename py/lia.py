@@ -23,11 +23,19 @@ _py = os.path.join(basedir, 'py')
 _data = os.path.join(basedir, 'data')
 _images = os.path.join(basedir, 'images')
 
-def true_angles(file):
+def true_angles(file, inverted=False):
 
     mesh = o3d.io.read_triangle_mesh(file)
     mesh.compute_triangle_normals()
     tnorm = np.asarray(mesh.triangle_normals)
+
+    # --------------------------------------------
+    # --- If normals are ordered as [x, z, y] ---
+    # --- Next line fix it to be [x, y, z]     ---
+    # --------------------------------------------
+    if inverted:
+        print('==== Inverted normals =====')
+        tnorm[:, [1, 2]] = tnorm[:, [2, 1]]
 
     true_angs = []
 
