@@ -9,6 +9,7 @@ from scipy.stats import chisquare
 from time import process_time
 from scipy import interpolate
 import pyrr 
+from numpy import genfromtxt
 from mpl_toolkits.mplot3d import Axes3D
 from plyfile import PlyData, PlyElement
 
@@ -74,7 +75,32 @@ def ply2npy(mockname, downsample=None):
         else:
             np.save(outfile, df)
 
+def csv2npy(mockname, downsample=None):
+    '''
+    Convert GroIMP ply output files into real npy
+    '''         
+    datapath = os.path.join(_data, mockname)
+    # read the numpy files
+    for file in glob.glob(os.path.join(datapath, '*.csv')):
+        df = np.loadtxt(file, delimiter=',',
+                 dtype={'names':('x', 'y', 'z'),
+                 'formats':('f4', 'f4', 'f4')})
+        #df = np.genfromtxt(file, delimiter=',', encoding=None, names=False,
+                        #    dtype= float)
+        #df = np.loadtxt(file)
+       # print(df)
 
+        filename = file.split('/')[-1].split('.')[0]
+
+        print('%s done --> Number of beams: %i' %(file.split('/')[-1], len(df)))
+        outfile = os.path.join(_data, mockname, filename)
+
+        if downsample is not None:
+            keep = np.random.randint(0, len(df), int(len(df) * downsample))
+            # print(filename, len(df), len(df[keep]))
+            np.save(outfile, df[keep])
+        else:
+            np.save(outfile, df)
 
 
 def load_scan_pos(filename):
