@@ -783,23 +783,23 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds, inverted=False):
     # Area per triangle
     area = np.full(len(voxk), np.round(sa/len(voxk), 6))
 
-    print('======')
-    print('surface area', sa)
-    print('number of trinagles', len(voxk))
-    print('Area per triangle', set(area))
-    print('angles mesh', set(angles_mesh))
+    # print('======')
+    # print('surface area', sa)
+    # print('number of trinagles', len(voxk))
+    # print('Area per triangle', set(area))
+    # print('angles mesh', set(angles_mesh))
 
     # for volume
     vert = np.asarray(mesh.vertices)
-    print('Number of vertices', len(vert))
+    # print('Number of vertices', len(vert))
     pcd = loads.points2pcd(vert)
     # voxel = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
     voxel = o3d.geometry.VoxelGrid.create_from_point_cloud_within_bounds(pcd, voxel_size=voxel_size, min_bound=PRbounds[0], max_bound=PRbounds[1])
     width, height, depth = voxel.get_max_bound() - voxel.get_min_bound()
 
     volume = width * height * kbins * voxel_size
-    print(' ---------- width, height, kbins * voxel_size',width, height, kbins * voxel_size)
-    print('------- volume', volume)
+    # print(' ---------- width, height, kbins * voxel_size',width, height, kbins * voxel_size)
+    # print('------- volume', volume)
 
     ar = np.arange(0, kmax, kbins)
     kcoords = []
@@ -843,15 +843,15 @@ def get_LADS_mesh(meshfile, voxel_size, kbins, kmax, PRbounds, inverted=False):
         lads.append([(i[0]+deltaH)*voxel_size, A/volume])
         # print(kf, ki)
         # print(len(i), i[0], deltaH, A/volume)
-        print('======== kbin:', i, '========')
+        # print('======== kbin:', i, '========')
         # print('Area leaf:', Aleaf)
-        print('number of triangles per bin', np.sum(keep))
-        print('total surface area per kbin', area[keep].sum())
-        print('Area per kbin corrected:', A)
-        print('labda:', set(angles_mesh[keep]))
+        # print('number of triangles per bin', np.sum(keep))
+        # print('total surface area per kbin', area[keep].sum())
+        # print('Area per kbin corrected:', A)
+        # print('labda:', set(angles_mesh[keep]))
 
-    print(np.round(voxel_size,2), kbins, np.round(sa,2), np.round(asum,2))
-    print('------ A sum corrected', asum_corrected)
+    # print(np.round(voxel_size,2), kbins, np.round(sa,2), np.round(asum,2))
+    # print('------ A sum corrected', asum_corrected)
     # print(np.array(lads))
 
     return np.array(lads)

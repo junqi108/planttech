@@ -56,7 +56,7 @@ def vecttoangle(v1, v2):
     
     return np.rad2deg(angle)
 
-def mesh_leaf_area(meshfile, Nleaves):
+def mesh_leaf_area(meshfile, Nleaves=4):
     '''
     Get the leaf area from mesh file.
     '''
@@ -65,15 +65,20 @@ def mesh_leaf_area(meshfile, Nleaves):
     mesh = o3d.io.read_triangle_mesh(meshfile)
     cidx, nt, area = mesh.cluster_connected_triangles()
 
-    if Nleaves is None:
-        Nleaves = 4
-
     # Hexagonal leaves from blensor have 4 trinagles in mesh
     keep = (np.array(nt) == Nleaves)
     if keep.sum() != 0:
         la = np.array(area)[keep][0]
     else:
-        raise ValueError('Mesh does not find clusters leaves with %i triangles.' %(Nleaves))
+        Nleaves = list(set(nt))
+        if len(Nleaves) == 1:
+            keep = (np.array(nt) == Nleaves)
+            la = np.array(area)[keep][0]
+        else:
+            raise ValueError('Leaf have different number of triagles:' %(Nleaves))
+
+    print('Leaf area:', la)
+    print('Nleaves:', Nleaves)
 
     return np.round(la, 6)
 
