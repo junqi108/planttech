@@ -754,8 +754,8 @@ def main2(points, sensors, pointsPR, voxel_size, resdir, treename, PRbounds, sho
                 ax.scatter3D(*p1, c='g', s=10)
                 ax.scatter3D(*res, c='k', s=10)
 
-        else:
-            print('Not in PR!!!!')
+        # else:
+            # print('Not in PR!!!!')
     if show: 
         plt.show()
 
