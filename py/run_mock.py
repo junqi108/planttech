@@ -156,7 +156,7 @@ def runall(pointsPR, sensorsPR, voxel_size, tree, N, PRbounds, kbins=None):
 
 if __name__ == "__main__":
 
-    mockname = 'test_kiwi_2'
+    mockname = 'kiwi'
     voxel_size = 0.15
     kbins = 1
     print('Voxel Size=', voxel_size)

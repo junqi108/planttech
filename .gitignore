@@ -11,13 +11,12 @@ blensor_kiwitree_parameters/
 reports/
 .DS_Store
 pdal/
-data/
 **/.ipynb_checkpoints
 .~lock.*
 **.blend1
 **.mtl
 **_build/
-
+data/
 *.png
 **obj
 **ply
