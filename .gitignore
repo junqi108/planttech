@@ -16,7 +16,7 @@ pdal/
 **.blend1
 **.mtl
 **_build/
-
+data/
 *.png
 **obj
 **ply
