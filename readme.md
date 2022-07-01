@@ -33,20 +33,16 @@ Remember to change the last line if needed with the correct path of your anacond
 prefix: /Users/tardis/opt/anaconda3/envs/plant-env
 ```
 
-```{note}
-If getting the issue `ResolvePackageNotFound` just move these packages under 'pip'.
+> If getting the issue `ResolvePackageNotFound` just move these packages under 'pip'. Install `laspy` with
+> ```
+> $ conda install -c conda-forge laspy
+> ```
 
-Install `laspy` with
+> If getting issue `No LazBackend selected, cannot decompress data` simply install:
+> ```
+> $ pip install laszip
+> ```
 
-> conda install -c conda-forge laspy
-```
-
-```{note}
-
-If getting issue `No LazBackend selected, cannot decompress data` simply install:
-
-> pip install laszip
-```
 
 ## create kernel for env
 
