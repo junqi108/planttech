@@ -77,7 +77,7 @@ def ply2npy(mockname, downsample=None):
 
 def csv2npy(mockname, downsample=None):
     '''
-    Convert GroIMP ply output files into real npy
+    Convert GroIMP point cloud output files into real npy
     '''         
     datapath = os.path.join(_data, mockname)
     # read the numpy files
