@@ -48,33 +48,6 @@ def numpy2npy(mockname, downsample=None):
         else:
             np.save(outfile, df)
 
-def ply2npy(mockname, downsample=None):
-    '''
-    Convert GroIMP ply output files into real npy
-    '''
-           
-    datapath = os.path.join(_data, mockname)
-
-    # read the numpy files
-    for file in glob.glob(os.path.join(datapath, '*.ply')):
-        df1 = PlyData.read(file)
-        df = np.transpose([df1.elements[0].data['x'],
-                            df1.elements[0].data['y'],
-                            df1.elements[0].data['z']])
-        
-        #df = np.loadtxt(file)
-        filename = file.split('/')[-1].split('.')[0]
-
-        print('%s done --> Number of beams: %i' %(file.split('/')[-1], len(df)))
-        outfile = os.path.join(_data, mockname, filename)
-
-        if downsample is not None:
-            keep = np.random.randint(0, len(df), int(len(df) * downsample))
-            # print(filename, len(df), len(df[keep]))
-            np.save(outfile, df[keep])
-        else:
-            np.save(outfile, df)
-
 def csv2npy(mockname, downsample=None):
     '''
     Convert GroIMP point cloud output files into real npy
