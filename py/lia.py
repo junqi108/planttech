@@ -9,7 +9,7 @@ from time import process_time
 
 import loads
 import figures
-
+import re
 __author__ = 'Omar A. Ruiz Macias'
 __copyright__ = 'Copyright 2021, PLANTTECH'
 __version__ = '0.1.0'
@@ -182,6 +182,12 @@ def get_weigths(points, voxel_size=0.5):
 
     return ws
 
+def _process_row(row: str):
+    row = row.replace("\n", "").replace("[", "").replace("]", "").split(" ")
+    row = ' '.join(list(filter(None, row)))
+   # print(row)
+    return row
+
 def leaf_angle(points, mockname, treename, voxel_size_w, kd3_sr, max_nn, save=False,
 savefig=False, text=None, downsample=False, weigths=True, voxel_size_h=1, ismock=True,
 ylim=None, ylimh=None, savefig_extra=False):
@@ -284,7 +290,30 @@ ylim=None, ylimh=None, savefig_extra=False):
         
         # save angles and LAD per height
         outdir_res_height = os.path.join(resdir, 'results_per_height_%s.csv' %(treename))
-        pd.DataFrame.from_dict(results_per_height).to_csv(outdir_res_height, index=False)
+        df = pd.DataFrame.from_dict(results_per_height)
+        df['values'] =  df['values'].astype(str)
+        df['values'] = df["values"].apply(lambda row : _process_row(row))
+
+        #for col in df:
+        #    df[col] =df[col].astype(str).str.replace("[","").str.replace("]","")
+            #df['values'] = df['values'].astype(str).str.replace('\\n\\n', '\\n', regex=True)
+            #df['values'] = df['values'].astype(str).str.strip('\"')
+            #df['values'] = df['values'].astype(str).str.strip('\'')
+            #df['values'] = df['values'].astype(str).str.strip('\n')
+           # df['values'] =  re.sub("[^A-Za-z]"," ", df['values'])
+
+        # for i in df['values']: 
+        #     re.sub("[^A-Za-z]"," ", i)
+        #     i.replace('\"',"").replace("\n","")
+        #     i = i.strip('\"')
+        #     i = i.strip('\'')
+        #     i = i.strip('\n')
+        #     print(i)
+        
+        #df['values'] = pd.to_numeric(df['values'].str.replace(r"[^\d\\n]", " ")))
+        
+        df.to_csv(outdir_res_height, index=True)
+
 
         if weigths:
             outdir_ws = os.path.join(resdir, 'weights_%s.npy' %(treename))
